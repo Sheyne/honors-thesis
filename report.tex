@@ -34,24 +34,25 @@
     \DeclareMathOperator{\InterOrObj}{InterOrObj}
     \DeclareMathOperator{\ObjectSubtype}{ObjectSubtype}
     \DeclareMathOperator{\RecordSubtype}{RecordSubtype}
-    \DeclareMathOperator{\Value}{Value}
-    \DeclareMathOperator{\StringV}{StringV}
-    \DeclareMathOperator{\NumberV}{NumberV}
-    \DeclareMathOperator{\BooleanV}{BooleanV}
-    \DeclareMathOperator{\RecV}{RecV}
-    \DeclareMathOperator{\ObjV}{ObjV}
-    \DeclareMathOperator{\ListV}{ListV}
-    \DeclareMathOperator{\SetV}{SetV}
-    \DeclareMathOperator{\MapV}{MapV}
-    \DeclareMathOperator{\UnionV}{UnionV}
-    \DeclareMathOperator{\ValueType}{ValueType}
+    \DeclareMathOperator{\Value}{Value_\Sigma}
+    \DeclareMathOperator{\StringV}{StringV_\Sigma}
+    \DeclareMathOperator{\NumberV}{NumberV_\Sigma}
+    \DeclareMathOperator{\BooleanV}{BooleanV_\Sigma}
+    \DeclareMathOperator{\RecV}{RecV_\Sigma}
+    \DeclareMathOperator{\ObjV}{ObjV_\Sigma}
+    \DeclareMathOperator{\ListV}{ListV_\Sigma}
+    \DeclareMathOperator{\SetV}{SetV_\Sigma}
+    \DeclareMathOperator{\MapV}{MapV_\Sigma}
+    \DeclareMathOperator{\UnionV}{UnionV_\Sigma}
+    \DeclareMathOperator{\ValueType}{ValueType_\Sigma}
     \DeclareMathOperator{\textref}{ref}
     \DeclareMathOperator{\ObjFields}{ObjFields}
     \DeclareMathOperator{\ObjPairsMatch}{ObjPairsMatch}
     \DeclareMathOperator{\where}{ where }
     \DeclareMathOperator{\textif}{ if }
     \DeclareMathOperator{\suchthat}{s.t.}
-    \newcommand{\ValueRef}{(\textref_{\Value})}    
+    \newcommand{\ValueRef}{\textref}
+    \newcommand{\ValueDeref}[1]{\Sigma(#1)}
 \begin{document}
 
 
@@ -278,7 +279,7 @@ graphs.
 \end{align*}
 
 \begin{align*}
-    \ValueType(\ValueRef_1) &= \ValueType(\operatorname{deref}(\ValueRef_1))\\
+    \ValueType(\ValueRef_1) &= \ValueType(\ValueDeref{\ValueRef_1}) \\
     \ValueType(\StringV(\Type_1, \_)) &= \Type_1 \\
     \ValueType(\NumberV(\Type_1, \_)) &= \Type_1 \\
     \ValueType(\BooleanV(\Type_1, \_)) &= \Type_1 \\
@@ -290,12 +291,7 @@ graphs.
 \end{align*}
 \begin{align*}
     \ObjPairsMatch(((\String_1, \Type_1),...), ((\String_1, \ValueRef_1), ...)) 
-    \textif \forall i, \ValueType(\ValueRef_i) <: \Type_i
-\end{align*}
-
-\begin{align*}
-    \operatorname{getref} &: \Value \rightarrow \ValueRef \\
-    \operatorname{deref}(\operatorname{getref}(\Value_1)) &= \Value_1 \\
+    \textif \forall i, \ValueType(\Value_i) <: \Type_i
 \end{align*}
 
 A valid graph then matches 
