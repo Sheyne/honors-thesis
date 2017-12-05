@@ -1,0 +1,87 @@
+\documentclass{article}
+    % General document formatting
+    \usepackage[margin=0.7in]{geometry}
+    \usepackage[parfill]{parskip}
+    \usepackage{amsopn}
+    \usepackage[utf8]{inputenc}
+    
+    % Related to math
+    \usepackage{amsmath,amssymb,amsfonts,amsthm}
+
+    \DeclareMathOperator{\StringT}{StringT}
+    \DeclareMathOperator{\NumberT}{NumberT}
+    \DeclareMathOperator{\BooleanT}{BooleanT}
+    \DeclareMathOperator{\LitT}{LitT}
+    \DeclareMathOperator{\RecT}{RecT}
+    
+\begin{document}
+
+\section{Types}
+\subsection{Primitives}
+
+\[
+\begin{aligned}
+&\text{Primitives} = \{ \StringT, \NumberT, \BooleanT\}\\
+&\LitT(T, L) \text{ where $T \in \text{Primitives}$ and $L$ is a Javascript literal matching $T$}\\
+&\LitT(T, L) \le T
+\end{aligned}
+\]
+
+\subsection{Records}
+
+\[
+\begin{aligned}
+&\RecT(X_0 \rightarrow Y_0, ...) \text{ where $X_i$ is some symbol and $Y_i \in \text{Types}$}
+\end{aligned}
+\]
+Records can only be subtypes of records and the subtype relation is defined structurally
+
+% ## Objects 
+
+% Objects are defined similarly to Records, but have names, a nominal subtype relation, and a notion of methods.
+
+% ## Intersections
+
+% $$
+% \begin{aligned}
+% &\text{InterT}(\text{ObjectT}(T_1), ...) \\
+% &IT = \text{InterT}(..., \text{ObjectT}(T_i), ...) \implies IT \le T_i
+% \end{aligned}
+% $$
+
+% Also intersections A can be subtypes of other intersections B if A has subtypes of all the types B has
+
+% # Values
+
+% Define a primitive value with $T$ a Primitive or Literal type, $J$ a javascript value matching $T$, and $env$ a value environment
+
+%     PrimV(T, J, env)
+
+% $V$: A primitive $Value$, $J$: a javascript value matching the type of $V$
+
+%     PrimSetV(V, J)
+
+%     PrimGetV(V) -> J
+
+% Define a record value of type $T$ with default field values
+
+%     RecV(T, env)
+
+% set the field of $R$ with name $N$ to $M$
+
+%     RecSetV(R, N, M):
+%         t = RecGetT(typeof(R), N)
+%         if not isSubtype(typeof(M), t):
+%             throw "Cannot assign M to R.N"
+%         R[N] = M
+
+%     RecGetV(R, N)
+
+
+
+% Discussion of Invariance, Covariance, Contravariance w.r.t custom types 
+
+% Map, Set, Array, Tuple are special cased and not built into the main library
+
+
+\end{document}

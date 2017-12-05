@@ -1,0 +1,395 @@
+\documentclass{article}
+    % General document formatting
+    \usepackage[margin=0.7in]{geometry}
+    \usepackage[parfill]{parskip}
+    \usepackage{amsopn}
+    \usepackage{mathtools}
+    \usepackage[utf8]{inputenc}
+    \usepackage{hyperref}
+    
+    % Related to math
+    \usepackage{amsmath,amssymb,amsfonts,amsthm}
+
+    \DeclareMathOperator{\StringT}{StringT}
+    \DeclareMathOperator{\NumberT}{NumberT}
+    \DeclareMathOperator{\BooleanT}{BooleanT}
+    \DeclareMathOperator{\LitT}{LitT}
+    \DeclareMathOperator{\JSLit}{JSLit}
+    \DeclareMathOperator{\JSTypeof}{JSTypeof}
+    \DeclareMathOperator{\RecT}{RecT}
+    \DeclareMathOperator{\ObjT}{ObjT}
+    \DeclareMathOperator{\ListT}{ListT}
+    \DeclareMathOperator{\SetT}{SetT}
+    \DeclareMathOperator{\MapT}{MapT}
+    \DeclareMathOperator{\ObjType}{ObjType}
+    \DeclareMathOperator{\UnionT}{UnionT}
+    \DeclareMathOperator{\InterT}{InterT}
+    \DeclareMathOperator{\LookupObjRef}{LookupObjRef}
+    \DeclareMathOperator{\String}{String}
+    \DeclareMathOperator{\Number}{Number}
+    \DeclareMathOperator{\Boolean}{Boolean}
+    \DeclareMathOperator{\type-ref}{ref}
+    \DeclareMathOperator{\Type}{Type}
+    \DeclareMathOperator{\NoSuper}{NoSuper}
+    \DeclareMathOperator{\InterOrObj}{InterOrObj}
+    \DeclareMathOperator{\ObjectSubtype}{ObjectSubtype}
+    \DeclareMathOperator{\RecordSubtype}{RecordSubtype}
+    \DeclareMathOperator{\Value}{Value}
+    \DeclareMathOperator{\StringV}{StringV}
+    \DeclareMathOperator{\NumberV}{NumberV}
+    \DeclareMathOperator{\BooleanV}{BooleanV}
+    \DeclareMathOperator{\RecV}{RecV}
+    \DeclareMathOperator{\ObjV}{ObjV}
+    \DeclareMathOperator{\ListV}{ListV}
+    \DeclareMathOperator{\SetV}{SetV}
+    \DeclareMathOperator{\MapV}{MapV}
+    \DeclareMathOperator{\UnionV}{UnionV}
+    \DeclareMathOperator{\ValueType}{ValueType}
+    \DeclareMathOperator{\ObjFields}{ObjFields}
+    \DeclareMathOperator{\ObjPairsMatch}{ObjPairsMatch}
+    \DeclareMathOperator{\where}{ where }
+    \DeclareMathOperator{\textif}{ if }
+    \DeclareMathOperator{\suchthat}{s.t.}
+    
+\begin{document}
+
+
+\section{Intro}
+
+Sinap IDE is a program to allow editing of arbitrary graph
+programming languages. Because it wants to be an editor for 
+many different languages, a pluggable architecture was 
+designed so that Sinap could change its user interface (UI)
+to best support each language. 
+
+This interface consisted of two parts:
+
+\begin{enumerate}
+    \item A data-language to describe graph components
+    \item A data-description language to define valid schema
+    for the data language
+\end{enumerate}
+
+The idea is that while editing a graph, components of the
+graph will have different attributes associated with them 
+that the editor should present contextually. For example, in
+a graph-language describing deterministic finite-state 
+automata (DFAs) edges should have a ``symbol" attribute of 
+type character corresponding to the input by which this 
+edge should be followed. 
+
+More complex data-types should also be allowed, such that
+nodes could have, for example, a ``dog" attribute which, 
+to use TypeScript syntax, the following structure:
+
+\begin{verbatim}
+class Dog {
+    name: string;
+    age: number;
+    weight: number;
+}
+\end{verbatim}
+
+With the ability for each of the fields themselves to have the 
+same kind of rich types. 
+
+\subsection{Notation}
+The symbol \((\operatorname{Kind}_1, ...)\) is equivalent to 
+\((\operatorname{Kind}_i)\). They are also equivalent to 
+\((\operatorname{Kind}_1, ..., \operatorname{Kind}_n)\)
+where \(n\) is unspecified and represent an ordered list 
+of \(n\) elements. \(\{\operatorname{Kind}_i\}\) represents 
+the set of the elements of the list. 
+
+\section{The Type System}
+
+The data-description language is called the type system and has 
+the following structure:
+
+\begin{align*}
+\Type = &\LitT(\JSLit) \\
+&|\StringT \\
+&|\NumberT \\
+&|\BooleanT \\
+&|\RecT((\String, \Type), ...) \\
+&|\ListT(\Type) \\
+&|\SetT(\Type) \\
+&|\MapT(\Type, \Type) \\
+&|\ObjT(\String, \String | \NoSuper, ((\String, \Type), ...)) \\
+&|\InterT(\ObjT, ...) \\
+&|\UnionT(\Type, ...)\\
+\end{align*}
+
+Use the definitions of ``string" and ``number" from
+\href{https://www.json.org/}{https://www.json.org/}, 
+and call them \(\operatorname{JSString}\) and 
+\(\operatorname{JSNumber}\) respectively.
+
+\begin{align*}
+    \JSLit = &\operatorname{JSString} \\
+    &| \operatorname{JSNumber} \\
+    &| \operatorname{true} \\
+    &| \operatorname{false} \\
+\end{align*}
+
+\begin{align*}
+    \JSTypeof(\operatorname{JSString}) &= \StringT \\
+    \JSTypeof(\operatorname{JSNumber}) &= \NumberT \\
+    \JSTypeof(\operatorname{true}) &= \BooleanT \\
+    \JSTypeof(\operatorname{false}) &= \BooleanT \\
+\end{align*}
+
+Records are structurally typed, two records with the same structure have
+the same type. Objects are nominally typed, so the type system needs some
+notion of references to support them. 
+
+\subsection{Subtype Relations}
+
+Define \(\bullet<:\bullet\)
+
+\begin{align*}
+    \Type_1&<:\Type_1 \\
+    \LitT(\JSLit_1)&<:\Type_1 \quad \textif \JSTypeof(\JSLit_1) = \Type_1 \\
+    \InterT(\Type_{1,1}, ..., \Type_{1,n})&<:\InterT(\Type_{2,1}, ..., Type_{2,m}) 
+    \quad \textif \forall T\in \{\Type_{2,i}\} \exists T' \in \{\Type_{1,i}\} \suchthat T'<:T \\
+    \InterT(..., \Type_i, ...)&<:\ObjT_1 \quad \textif \ObjT_1 = \Type_i  \\
+    \ObjT_1 &<: \ObjT(\String_1, \_, \_) \quad \textif \ObjectSubtype(\String_1, \ObjT_1)\\
+    \RecT_1&<:\RecT_2 \quad \textif \RecordSubtype(\RecT_1, \RecT_2) \\
+    \ListT(\Type_1)&<:\ListT(\Type_2) \quad \textif \Type_1<:\Type_2 \\
+    \SetT(\Type_1)&<:\SetT(\Type_2) \quad \textif \Type_1<:\Type_2 \\
+    \MapT(\Type_{11}, \Type_{12})&<:\MapT(\Type_{21}, \Type_{22}) \quad \textif \Type_{11}<:\Type_{21} \text{ and } \Type_{12}<:\Type_{22} \\
+\end{align*}
+\begin{align*}
+    \ObjectSubtype(\String_1, \ObjT(\String_2,\_, \_)) \quad &\textif 
+    \quad (\String_1 = \String_2)\\
+    \ObjectSubtype(\String_1, \ObjT(\_,\String_2, \_)) \quad &\textif 
+    \quad \ObjectSubtype(\String_1, \LookupObjRef(\String_2)))
+\end{align*}
+\begin{align*}
+    \RecordSubtype(\RecT((\String_{1,1}, \Type_{1, 1}), ..., (\String_{1,n}, \Type_{1, n})), \RecT((\String_{2,1}, \Type_{2, 1}), ..., (\String_{2,m}, \Type_{2, m}))) \\
+    \textif \{\String_{2,i}\} \subset \{\String_{1,i}\} \text{ and } \String_{1, i} = \String_{2, j} \implies \Type_{1, i} <: \Type_{2, j}
+\end{align*}
+
+Note that this actually allows for some weirdness, because 
+we lose some of the restrictions of the subtype Map when using
+it as the supertype. This is incredibly unlikely in the use case 
+of Sinap because data aren't reused between different nodes and
+edges. 
+
+The goal of creating the above language (referred to as Sinap's 
+Type System) is to allow interpreter implementers to specify what 
+kinds of graphs are valid for their interpreter. This means that 
+graphs can allow various fields on nodes and edges and the interpreter
+can guarantee that the fields are present on all of the nodes that it
+is passed. It also allows different kinds of nodes and edges to be 
+specified and for rules to exists defining what kinds of nodes can 
+via which edges. 
+
+While Sinap's Type System is implemented as a library and can have 
+concrete syntaxes in several languages, our most mature implementation 
+is in typescript. 
+
+An example of how this translation is applied is given below.
+
+\begin{verbatim}
+class Node1 {
+    label: string;
+    customAttribute: number;
+}
+
+class Node2 {
+    label: string;
+    otherAttribute: {
+        f1: boolean,
+        f2: number
+    };
+}
+
+class Edge {
+    label: string
+    source: Node1;
+    destination: Node2;
+}
+
+type Nodes = Node1 | Node2;
+type Edges = Edge;
+\end{verbatim}
+
+The above TypeScript gets converted to the following representation:
+\begin{align*}
+    \text{Nodes} = &\UnionT\left(
+        \begin{aligned}
+        &\ObjT\left(
+            \begin{aligned}    
+                \text{``Node1"}, \NoSuper, \left(
+                    \begin{aligned}
+                        &(\text{``label"}, \StringT),  \\
+                        &(\text{``customAttribute"}, \NumberT)
+                    \end{aligned}\right)
+            \end{aligned}\right),  \\
+        &\ObjT\left(\text{``Node2"}, \NoSuper, \left(\begin{aligned}
+            (&\text{``label"}, \StringT),  \\
+            (&\text{``otherAttribute"}, \RecT\left(
+                \begin{aligned}
+                    (&\text{``f1"}, \BooleanT),  \\
+                    (&\text{``f2"}, \NumberT)
+                \end{aligned}\right)
+        \end{aligned}\right)\right)
+        \end{aligned}\right)  \\
+    \text{Edges} = &\UnionT\left(\ObjT\left(
+        \text{``Edge"}, \NoSuper,  
+        \left(\begin{aligned}
+            (&\text{``label"}, \StringT), \\
+            (&\text{``source"}, \ObjT(\text{``Node1"}, \_, \_)), \\
+            (&\text{``destination"}, \ObjT(\text{``Node2"}, \_, \_)) \\             
+        \end{aligned}\right)\right)\right)
+\end{align*}
+                
+
+\section{Values}
+
+Now that we have a description of valid graph structures for some
+interpreter, we need to define a language for describing specific 
+graphs. 
+
+Start with: 
+
+\begin{align*}
+    \Value =& \StringV(\Type_1, \String_1) \quad\where \Type_1 <: \StringT \\
+    &| \NumberV(\Type_1, \Number_1) \quad\where \Type_1 <: \NumberT \\
+    &| \BooleanV(\Type_1, \Boolean_1) \quad\where \Type_1 <: \BooleanT \\
+    &| \ObjV(\Type_1, V=((\String_1, \Value_1), ...)) \quad\where 
+    \ObjPairsMatch(\ObjFields(\Type_1), V) \\
+    &| \UnionV(\UnionT(..., \Type_i, ...), \Value_1) \where
+    \ValueType(\Value_1) <: \Type_i\\
+    &| \ListV(\ListT(\Type_1), (\Value_1, ...)) \where \ValueType(\Value_i) <: \Type_1 \\
+    &| \SetV(\SetT(\Type_1), \{\Value_1, ...\}) \where \ValueType(\Value_i) <: \Type_1 \\
+    &| \MapV(\MapT(\Type_1, \Type_2), ((\Value_{1,1}, \Value_{2,1}), ...)) \where \bigwedge
+    \begin{aligned}
+        \ValueType(\Value_{1, i}) <: \Type_1 \\
+        \ValueType(\Value_{2, i}) <: \Type_2 
+    \end{aligned}\\
+\end{align*}
+
+\begin{align*}
+    \ObjFields(\ObjT(\_, \String_S, (P_1 = (\String_1, \Type_1), ...))) &= \operatorname{concat}(\ObjFields(\LookupObjRef(\String_S), (P_n))) \\
+    \ObjFields(\InterT(ObjT_1, ...)) &= \operatorname{concat}(\ObjFields(\ObjT_1), ...)
+\end{align*}
+
+\begin{align*}
+    \ValueType(\StringV(\Type_1, \_)) &= \Type_1 \\
+    \ValueType(\NumberV(\Type_1, \_)) &= \Type_1 \\
+    \ValueType(\BooleanV(\Type_1, \_)) &= \Type_1 \\
+    \ValueType(\ObjV(\Type_1, \_)) &= \Type_1 \\
+    \ValueType(\UnionV(\Type_1, \_)) &= \Type_1 \\
+    \ValueType(\ListV(\Type_1, \_)) &= \Type_1 \\
+    \ValueType(\SetV(\Type_1, \_)) &= \Type_1 \\
+    \ValueType(\MapV(\Type_1, \_)) &= \Type_1 \\
+\end{align*}
+\begin{align*}
+    \ObjPairsMatch(((\String_1, \Type_1),...), ((\String_1, \Value_1), ...)) 
+    \textif \forall i, \ValueType(\Value_i) <: \Type_i
+\end{align*}
+
+Note that \(\InterT(\ObjT(``A", ...)) <: \ObjT(``A", ...)\), and we 
+need a validity constraint on the \((k, v)\) pairs of the second argument
+of \(\ObjV\).
+
+When we then go to create a graph, it must conform to the 
+data-description language above. 
+
+That is, if we define 
+
+\begin{verbatim}
+Node = ObjT("Node1", NoSuper,
+    (
+        ("name", StringT),
+        ("position", RecT(
+                ("x", NumberT),
+                ("x", NumberT)
+            )
+        ),
+        ("children", ListT(Edge)),
+        ("parents", ListT(Edge))
+    )
+)
+
+Edge = ObjT("Edge1", NoSuper,
+    (
+        ("destination", Node)
+        ("source", Node)
+    )
+)
+
+\end{verbatim}
+
+Side-note: in practice, \texttt{Node} and \texttt{Edge} were called 
+\texttt{Nodes} and \texttt{Edges} and were required to be unions of 
+\(\ObjT\)s. 
+
+
+Could have a conforming data-structure looking like
+
+\begin{verbatim}
+someNode1 = {
+    kind: "Node1",
+    name: "Some Node 1",
+    position: {x: 17, y: 12},
+    children: [someEdge],
+    parents: []
+}
+someNode2 = {
+    kind: "Node1",
+    name: "Some Node 2",
+    position: {x: 17, y: 12},
+    children: []
+    parents: [someEdge]
+}
+someEdge = {
+    kind: "Edge1",
+    source: someNode1,
+    destination: someNode2,
+}
+\end{verbatim}
+
+The problem with this JSON-like data-structure is that it lacks 
+type tags. If a union is present somewhere in the structure, 
+it's impossible in-general to tell the type of the thing inside. 
+While the way that it should have been implemented is to tag the 
+unions, in early incarnations of the project, unions were being handled
+transparently (like in TypeScript). This meant that all Values would 
+have to be tagged. While we later implemented unions in a more explicit
+way, tags for all Values we kept. Thus, for each Type in the 
+data-description language, there was a corresponding type in the 
+data-language. 
+
+Something like (using the same Node/Edge definitions from the
+previous example):
+
+\begin{verbatim}
+someNode1 = ObjValue(Node1, {
+    name: StringValue("Some Node 1")
+    position: RecValue(RecT(
+        ("x", NumberT),
+        ("x", NumberT)
+    ), {x: NumberValue(17), y: NumberValue(12)}),
+    children: ListValue(Edge, [someEdge]),
+    parents: ListValue(Edge, [])
+})
+someNode2 = ObjValue(Node1, {
+    name: StringValue("Some Node 2")
+    position: RecValue(RecT(
+        ("x", NumberT),
+        ("x", NumberT)
+    ), {x: NumberValue(17), y: NumberValue(12)}),
+    children: ListValue(Edge1, [someEdge]),
+    parents: ListValue(Edge1, [])
+})
+someEdge = ObjValue(Edge1, {
+    source: someNode1,
+    destination: someNode2,
+})
+
+\end{verbatim}
+
+\end{document}
