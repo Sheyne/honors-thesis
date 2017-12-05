@@ -54,8 +54,6 @@
     \newcommand{\ValueRef}{\textref}
     \newcommand{\ValueDeref}[1]{\Sigma(#1)}
 \begin{document}
-
-
 \section{Intro}
 
 Sinap IDE is a program to allow editing of arbitrary graph
@@ -106,6 +104,17 @@ the set of the elements of the list.
 ``\(\_\)'' represents a symbol that has been omitted for brevity.
 
 \section{The Type System}
+
+\textbf{TODO: edit this next paragraph}
+The goal of creating the above language (referred to as Sinap's 
+Type System) is to allow interpreter implementers to specify what 
+kinds of graphs are valid for their interpreter. This means that 
+graphs can allow various fields on nodes and edges and the interpreter
+can guarantee that the fields are present on all of the nodes that it
+is passed. It also allows different kinds of nodes and edges to be 
+specified and for rules to exists defining what kinds of nodes can 
+via which edges. 
+
 
 The data-description language is called the type system and has 
 the following structure:
@@ -181,15 +190,6 @@ edges.
 Records are structurally typed, two records with the same structure have
 the same type. Objects are nominally typed, so the type system needs some
 notion of references to support them. 
-
-The goal of creating the above language (referred to as Sinap's 
-Type System) is to allow interpreter implementers to specify what 
-kinds of graphs are valid for their interpreter. This means that 
-graphs can allow various fields on nodes and edges and the interpreter
-can guarantee that the fields are present on all of the nodes that it
-is passed. It also allows different kinds of nodes and edges to be 
-specified and for rules to exists defining what kinds of nodes can 
-via which edges. 
 
 While Sinap's Type System is implemented as a library and can have 
 concrete syntaxes in several languages, our most mature implementation 
