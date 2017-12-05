@@ -45,12 +45,13 @@
     \DeclareMathOperator{\MapV}{MapV}
     \DeclareMathOperator{\UnionV}{UnionV}
     \DeclareMathOperator{\ValueType}{ValueType}
+    \DeclareMathOperator{\textref}{ref}
     \DeclareMathOperator{\ObjFields}{ObjFields}
     \DeclareMathOperator{\ObjPairsMatch}{ObjPairsMatch}
     \DeclareMathOperator{\where}{ where }
     \DeclareMathOperator{\textif}{ if }
     \DeclareMathOperator{\suchthat}{s.t.}
-    
+    \newcommand{\ValueRef}{(\textref_{\Value})}    
 \begin{document}
 
 
@@ -139,10 +140,6 @@ and call them \(\operatorname{JSString}\) and
     \JSTypeof(\operatorname{false}) &= \BooleanT \\
 \end{align*}
 
-Records are structurally typed, two records with the same structure have
-the same type. Objects are nominally typed, so the type system needs some
-notion of references to support them. 
-
 \subsection{Subtype Relations}
 
 Define \(\bullet<:\bullet\)
@@ -175,6 +172,10 @@ we lose some of the restrictions of the subtype Map when using
 it as the supertype. This is incredibly unlikely in the use case 
 of Sinap because data aren't reused between different nodes and
 edges. 
+
+Records are structurally typed, two records with the same structure have
+the same type. Objects are nominally typed, so the type system needs some
+notion of references to support them. 
 
 The goal of creating the above language (referred to as Sinap's 
 Type System) is to allow interpreter implementers to specify what 
@@ -252,22 +253,20 @@ Now that we have a description of valid graph structures for some
 interpreter, we need to define a language for describing specific 
 graphs. 
 
-Start with: 
-
 \begin{align*}
     \Value =& \StringV(\Type_1, \String_1) \quad\where \Type_1 <: \StringT \\
     &| \NumberV(\Type_1, \Number_1) \quad\where \Type_1 <: \NumberT \\
     &| \BooleanV(\Type_1, \Boolean_1) \quad\where \Type_1 <: \BooleanT \\
-    &| \ObjV(\Type_1, V=((\String_1, \Value_1), ...)) \quad\where 
+    &| \ObjV(\Type_1, V=((\String_1, \ValueRef_1), ...)) \quad\where 
     \ObjPairsMatch(\ObjFields(\Type_1), V) \\
-    &| \UnionV(\UnionT(..., \Type_i, ...), \Value_1) \where
-    \ValueType(\Value_1) <: \Type_i\\
-    &| \ListV(\ListT(\Type_1), (\Value_1, ...)) \where \ValueType(\Value_i) <: \Type_1 \\
-    &| \SetV(\SetT(\Type_1), \{\Value_1, ...\}) \where \ValueType(\Value_i) <: \Type_1 \\
-    &| \MapV(\MapT(\Type_1, \Type_2), ((\Value_{1,1}, \Value_{2,1}), ...)) \where \bigwedge
+    &| \UnionV(\UnionT(..., \Type_i, ...), \ValueRef_1) \where
+    \ValueType(\ValueRef_1) <: \Type_i\\
+    &| \ListV(\ListT(\Type_1), (\ValueRef_1, ...)) \where \ValueType(\ValueRef_i) <: \Type_1 \\
+    &| \SetV(\SetT(\Type_1), \{\ValueRef_1, ...\}) \where \ValueType(\ValueRef_i) <: \Type_1 \\
+    &| \MapV(\MapT(\Type_1, \Type_2), ((\ValueRef_{1,1}, \ValueRef_{2,1}), ...)) \where \bigwedge
     \begin{aligned}
-        \ValueType(\Value_{1, i}) <: \Type_1 \\
-        \ValueType(\Value_{2, i}) <: \Type_2 
+        \ValueType(\ValueRef_{1, i}) <: \Type_1 \\
+        \ValueType(\ValueRef_{2, i}) <: \Type_2 
     \end{aligned}\\
 \end{align*}
 
@@ -277,6 +276,7 @@ Start with:
 \end{align*}
 
 \begin{align*}
+    \ValueType(\ValueRef_1) &= \ValueType(\operatorname{deref}(\ValueRef_1))\\
     \ValueType(\StringV(\Type_1, \_)) &= \Type_1 \\
     \ValueType(\NumberV(\Type_1, \_)) &= \Type_1 \\
     \ValueType(\BooleanV(\Type_1, \_)) &= \Type_1 \\
@@ -287,109 +287,16 @@ Start with:
     \ValueType(\MapV(\Type_1, \_)) &= \Type_1 \\
 \end{align*}
 \begin{align*}
-    \ObjPairsMatch(((\String_1, \Type_1),...), ((\String_1, \Value_1), ...)) 
-    \textif \forall i, \ValueType(\Value_i) <: \Type_i
+    \ObjPairsMatch(((\String_1, \Type_1),...), ((\String_1, \ValueRef_1), ...)) 
+    \textif \forall i, \ValueType(\ValueRef_i) <: \Type_i
 \end{align*}
 
-Note that \(\InterT(\ObjT(``A", ...)) <: \ObjT(``A", ...)\), and we 
-need a validity constraint on the \((k, v)\) pairs of the second argument
-of \(\ObjV\).
+\begin{align*}
+    \operatorname{getref} &: \Value \rightarrow \ValueRef \\
+    \operatorname{deref}(\operatorname{getref}(\Value_1)) &= \Value_1 \\
+\end{align*}
 
-When we then go to create a graph, it must conform to the 
-data-description language above. 
-
-That is, if we define 
-
-\begin{verbatim}
-Node = ObjT("Node1", NoSuper,
-    (
-        ("name", StringT),
-        ("position", RecT(
-                ("x", NumberT),
-                ("x", NumberT)
-            )
-        ),
-        ("children", ListT(Edge)),
-        ("parents", ListT(Edge))
-    )
-)
-
-Edge = ObjT("Edge1", NoSuper,
-    (
-        ("destination", Node)
-        ("source", Node)
-    )
-)
-
-\end{verbatim}
-
-Side-note: in practice, \texttt{Node} and \texttt{Edge} were called 
-\texttt{Nodes} and \texttt{Edges} and were required to be unions of 
-\(\ObjT\)s. 
-
-
-Could have a conforming data-structure looking like
-
-\begin{verbatim}
-someNode1 = {
-    kind: "Node1",
-    name: "Some Node 1",
-    position: {x: 17, y: 12},
-    children: [someEdge],
-    parents: []
-}
-someNode2 = {
-    kind: "Node1",
-    name: "Some Node 2",
-    position: {x: 17, y: 12},
-    children: []
-    parents: [someEdge]
-}
-someEdge = {
-    kind: "Edge1",
-    source: someNode1,
-    destination: someNode2,
-}
-\end{verbatim}
-
-The problem with this JSON-like data-structure is that it lacks 
-type tags. If a union is present somewhere in the structure, 
-it's impossible in-general to tell the type of the thing inside. 
-While the way that it should have been implemented is to tag the 
-unions, in early incarnations of the project, unions were being handled
-transparently (like in TypeScript). This meant that all Values would 
-have to be tagged. While we later implemented unions in a more explicit
-way, tags for all Values we kept. Thus, for each Type in the 
-data-description language, there was a corresponding type in the 
-data-language. 
-
-Something like (using the same Node/Edge definitions from the
-previous example):
-
-\begin{verbatim}
-someNode1 = ObjValue(Node1, {
-    name: StringValue("Some Node 1")
-    position: RecValue(RecT(
-        ("x", NumberT),
-        ("x", NumberT)
-    ), {x: NumberValue(17), y: NumberValue(12)}),
-    children: ListValue(Edge, [someEdge]),
-    parents: ListValue(Edge, [])
-})
-someNode2 = ObjValue(Node1, {
-    name: StringValue("Some Node 2")
-    position: RecValue(RecT(
-        ("x", NumberT),
-        ("x", NumberT)
-    ), {x: NumberValue(17), y: NumberValue(12)}),
-    children: ListValue(Edge1, [someEdge]),
-    parents: ListValue(Edge1, [])
-})
-someEdge = ObjValue(Edge1, {
-    source: someNode1,
-    destination: someNode2,
-})
-
-\end{verbatim}
-
+A valid graph then matches 
+\[(\ListV(\ListT(\operatorname{Nodes}), \_), \ListV(\ListT(\operatorname{Edges}), \_))\]
+for some appropriate definition of Nodes and Edges.
 \end{document}
