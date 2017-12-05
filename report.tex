@@ -110,6 +110,8 @@ the set of the elements of the list.
 The data-description language is called the type system and has 
 the following structure:
 
+\textbf{TODO: motivate \(\LitT\)}
+
 \begin{align*}
 \Type = &\LitT(\JSLit) \\
 &|\StringT \\
@@ -255,6 +257,10 @@ The above TypeScript gets converted to the following representation:
 Now that we have a description of valid graph structures for some
 interpreter, we need to define a language for describing specific 
 graphs. 
+
+\textbf{TODO: explain \(\Sigma\). Per Matt: ``An arguments that threads through the 
+object graph."}
+
 
 \begin{align*}
     \Value =& \StringV(\Type_1, \String_1) \quad\where \Type_1 <: \StringT \\
