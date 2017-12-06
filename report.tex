@@ -99,7 +99,7 @@ The code for both can be found at
 
 The data that are allowable in the sidebar can be more complicated than
 simple strings and numbers. In the example above the ``Position" attribute
-of the node has a structure that similar to the following typescript code:
+of the node has a structure that similar to the following TypeScript code:
 
 \begin{samepage}
 \begin{verbatim}
@@ -214,7 +214,7 @@ notion of references to support them.
 
 While Sinap's Type System is implemented as a library and can have 
 concrete syntaxes in several languages, our most mature implementation 
-is in typescript. 
+is in TypeScript. 
 
 An example of how this translation is applied is given below.
 
@@ -246,7 +246,7 @@ An example of how this translation is applied is given below.
             (&\text{``destination"}, \ObjT(\text{``Node2"}, \_, \_)) \\             
         \end{aligned}\right)\right)\right)
 \end{align*}
-The above is equivalent to the following typescript:
+The above is equivalent to the following TypeScript:
 
 \begin{verbatim}
 class Node1 {
