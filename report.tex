@@ -181,15 +181,15 @@ Define \(\bullet<:\bullet\)
 
 \begin{align*}
     \Type_1&<:\Type_1 \\
-    \LitT(\JSLit_1)&<:\Type_1 \quad \textif \JSTypeof(\JSLit_1) = \Type_1 \\
+    \LitT(\JSLit_1)&<:\Type_1 &&\textif \JSTypeof(\JSLit_1) = \Type_1 \\
     \InterT(\Type_{1,1}, ..., \Type_{1,n})&<:\InterT(\Type_{2,1}, ..., Type_{2,m}) 
-    \quad \textif \forall T\in \{\Type_{2,i}\} \exists T' \in \{\Type_{1,i}\} \suchthat T'<:T \\
-    \InterT(..., \Type_i, ...)&<:\ObjT_1 \quad \textif \ObjT_1 = \Type_i  \\
-    \ObjT_1 &<: \ObjT(\String_1, \_, \_) \quad \textif \ObjectSubtype(\String_1, \ObjT_1)\\
-    \RecT_1&<:\RecT_2 \quad \textif \RecordSubtype(\RecT_1, \RecT_2) \\
-    \ListT(\Type_1)&<:\ListT(\Type_2) \quad \textif \Type_1<:\Type_2 \\
-    \SetT(\Type_1)&<:\SetT(\Type_2) \quad \textif \Type_1<:\Type_2 \\
-    \MapT(\Type_{11}, \Type_{12})&<:\MapT(\Type_{21}, \Type_{22}) \quad \textif \Type_{11}<:\Type_{21} \text{ and } \Type_{12}<:\Type_{22} \\
+    &&\textif \forall T\in \{\Type_{2,i}\} \exists T' \in \{\Type_{1,i}\} \suchthat T'<:T \\
+    \InterT(..., \Type_i, ...)&<:\ObjT_1 &&\textif \ObjT_1 = \Type_i  \\
+    \ObjT_1 &<: \ObjT(\String_1, \_, \_) &&\textif \ObjectSubtype(\String_1, \ObjT_1)\\
+    \RecT_1&<:\RecT_2 &&\textif \RecordSubtype(\RecT_1, \RecT_2) \\
+    \ListT(\Type_1)&<:\ListT(\Type_2) &&\textif \Type_1<:\Type_2 \\
+    \SetT(\Type_1)&<:\SetT(\Type_2) &&\textif \Type_1<:\Type_2 \\
+    \MapT(\Type_{11}, \Type_{12})&<:\MapT(\Type_{21}, \Type_{22}) &&\textif \Type_{11}<:\Type_{21} \text{ and } \Type_{12}<:\Type_{22} \\
 \end{align*}
 \begin{align*}
     \ObjectSubtype(\String_1, \ObjT(\String_2,\_, \_)) \quad &\textif 
