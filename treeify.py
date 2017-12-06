@@ -41,12 +41,13 @@ def to_operator(t):
     return r"{}".format(t)
 
 def print_step(tupe):
-    if isinstance(tupe, tuple) or isinstance(tupe, list):
-        [head], *rest = tupe
+    if not isinstance(tupe, str) and len(tupe) > 1:
+        head, *rest = tupe
+        head = head[0]
         return "{}{}{}{}".format(
             to_operator(head),
-            r"\left(\begin{aligned}",
-            r"\\".join(print_step(r) for r in rest),
+            r"\left(\begin{aligned} &",
+            r",\\&".join(print_step(r[0]) for r in rest),
             r"\end{aligned}\right)")
     else: 
         return to_operator(tupe)
@@ -57,6 +58,6 @@ while True:
     except EOFError:
         break
     print(r"\begin{align*}")
-    print(print_step(parse(i)))
+    print(print_step(parse(i)[0]))
     print(r"\end{align*}")
 

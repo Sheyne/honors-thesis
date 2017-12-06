@@ -1,1 +1,1 @@
-\UnionT (\ObjT "\"Node1\"" NoSuper (1))
+(\ListV \ListT_1 (c a b))
