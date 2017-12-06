@@ -6,8 +6,7 @@
     \usepackage{mathtools}
     \usepackage[utf8]{inputenc}
     \usepackage{hyperref}
-    
-    % Related to math
+    \usepackage{multicol}
     \usepackage{amsmath,amssymb,amsfonts,amsthm}
 
     \DeclareMathOperator{\StringT}{StringT}
@@ -54,21 +53,15 @@
     \newcommand{\ValueRef}{\textref}
     \newcommand{\ValueDeref}[1]{\Sigma(#1)}
 \begin{document}
+\begin{multicols}{2}
 \section{Intro}
 
-Sinap IDE is a program to allow editing of arbitrary graph
-programming languages. Because it wants to be an editor for 
-many different languages, a pluggable architecture was 
-designed so that Sinap could change its user interface (UI)
+Sinap IDE is a program to allow editing of graph
+programs in various graph programming langauages. 
+Because it wants to be an editor for many different
+graph-languages, a pluggable architecture was designed
+so that Sinap could change its user interface (UI)
 to best support each language. 
-
-This interface consisted of two parts:
-
-\begin{enumerate}
-    \item A data-language to describe graph components
-    \item A data-description language to define valid schema
-    for the data language
-\end{enumerate}
 
 The idea is that while editing a graph, components of the
 graph will have different attributes associated with them 
@@ -78,20 +71,47 @@ automata (DFAs) edges should have a ``symbol" attribute of
 type character corresponding to the input by which this 
 edge should be followed. 
 
-More complex data-types should also be allowed, such that
-nodes could have, for example, a ``dog" attribute which, 
-to use TypeScript syntax, the following structure:
+As you can see in Figure \ref{sinap-screenshot}, Sinap's UI
+presents the user with nodes and edges which can be selected 
+and edited in the sidebar. Allowing the sidebar to change based
+on what interpreter is what the type-system facilitates. 
 
+\begin{figure} 
+    \label{sinap-screenshot}  
+    \includegraphics[width=\textwidth]{sinap-screenshot}
+    \caption{Sinap IDE editing a graph}
+\end{figure}
+    
+Sinap's type–system consists of two parts:
+
+\begin{enumerate}
+    \item A data-language to describe graph components 
+    (implemented in values.ts)
+    \item A data-description language to define valid schema 
+    (implemented in types.ts)
+    for the data language
+\end{enumerate}
+
+The code for both can be found at 
+
+\href{https://github.com/2graphic/sinap-types}
+{https://github.com/2graphic/sinap-types}.
+
+The data that are allowable in the sidebar can be more complicated than
+simple strings and numbers. In the example above the ``Position" attribute
+of the node has a structure that similar to the following typescript code:
+
+\begin{samepage}
 \begin{verbatim}
-class Dog {
-    name: string;
-    age: number;
-    weight: number;
+type Point = {
+    x: number;
+    y: number;
 }
 \end{verbatim}
+\end{samepage}
 
-With the ability for each of the fields themselves to have the 
-same kind of rich types. 
+Although there fields aren't limited to simple types and the 
+whole structure can nest. \textbf{TODO: awkward phrasing, reword}. 
 
 \subsection{Notation}
 The symbol \((\operatorname{Kind}_1, ...)\) is equivalent to 
@@ -102,6 +122,7 @@ of \(n\) elements. \(\{\operatorname{Kind}_i\}\) represents
 the set of the elements of the list. 
 
 ``\(\_\)'' represents a symbol that has been omitted for brevity.
+\end{multicols}
 
 \section{The Type System}
 
@@ -122,6 +143,7 @@ the following structure:
 \textbf{TODO: motivate \(\LitT\)}
 
 \begin{align*}
+\begin{aligned}
 \Type = &\LitT(\JSLit) \\
 &|\StringT \\
 &|\NumberT \\
@@ -130,28 +152,27 @@ the following structure:
 &|\ListT(\Type) \\
 &|\SetT(\Type) \\
 &|\MapT(\Type, \Type) \\
-&|\ObjT(\String, \String | \NoSuper, ((\String, \Type), ...)) \\
+&|\ObjT\left(\begin{aligned}
+    &\String, \String | \NoSuper, \\
+&((\String, \Type), ...)
+\end{aligned}\right) \\
 &|\InterT(\ObjT, ...) \\
 &|\UnionT(\Type, ...)\\
-\end{align*}
-
-Use the definitions of ``string" and ``number" from
-\href{https://www.json.org/}{https://www.json.org/}, 
-and call them \(\operatorname{JSString}\) and 
-\(\operatorname{JSNumber}\) respectively.
-
-\begin{align*}
-    \JSLit = &\operatorname{JSString} \\
-    &| \operatorname{JSNumber} \\
-    &| \operatorname{true} \\
-    &| \operatorname{false} \\
-\end{align*}
-
-\begin{align*}
-    \JSTypeof(\operatorname{JSString}) &= \StringT \\
-    \JSTypeof(\operatorname{JSNumber}) &= \NumberT \\
-    \JSTypeof(\operatorname{true}) &= \BooleanT \\
-    \JSTypeof(\operatorname{false}) &= \BooleanT \\
+\end{aligned}
+\quad\quad\quad\begin{aligned}        
+\begin{aligned}
+\JSLit = &\operatorname{JSString} \\
+&| \operatorname{JSNumber} \\
+&| \operatorname{true} \\
+&| \operatorname{false} \\
+\end{aligned}\\\\
+\begin{aligned}
+\JSTypeof(\operatorname{JSString}) &= \StringT \\
+\JSTypeof(\operatorname{JSNumber}) &= \NumberT \\
+\JSTypeof(\operatorname{true}) &= \BooleanT \\
+\JSTypeof(\operatorname{false}) &= \BooleanT \\
+\end{aligned}  
+\end{aligned}  
 \end{align*}
 
 \subsection{Subtype Relations}
@@ -180,7 +201,7 @@ Define \(\bullet<:\bullet\)
     \RecordSubtype(\RecT((\String_{1,1}, \Type_{1, 1}), ..., (\String_{1,n}, \Type_{1, n})), \RecT((\String_{2,1}, \Type_{2, 1}), ..., (\String_{2,m}, \Type_{2, m}))) \\
     \textif \{\String_{2,i}\} \subset \{\String_{1,i}\} \text{ and } \String_{1, i} = \String_{2, j} \implies \Type_{1, i} <: \Type_{2, j}
 \end{align*}
-
+    
 Note that this actually allows for some weirdness, because 
 we lose some of the restrictions of the subtype Map when using
 it as the supertype. This is incredibly unlikely in the use case 
@@ -197,31 +218,6 @@ is in typescript.
 
 An example of how this translation is applied is given below.
 
-\begin{verbatim}
-class Node1 {
-    label: string;
-    customAttribute: number;
-}
-
-class Node2 {
-    label: string;
-    otherAttribute: {
-        f1: boolean,
-        f2: number
-    };
-}
-
-class Edge {
-    label: string
-    source: Node1;
-    destination: Node2;
-}
-
-type Nodes = Node1 | Node2;
-type Edges = Edge;
-\end{verbatim}
-
-The above TypeScript gets converted to the following representation:
 \begin{align*}
     \text{Nodes} = &\UnionT\left(
         \begin{aligned}
@@ -250,7 +246,31 @@ The above TypeScript gets converted to the following representation:
             (&\text{``destination"}, \ObjT(\text{``Node2"}, \_, \_)) \\             
         \end{aligned}\right)\right)\right)
 \end{align*}
-                
+The above is equivalent to the following typescript:
+
+\begin{verbatim}
+class Node1 {
+    label: string;
+    customAttribute: number;
+}
+
+class Node2 {
+    label: string;
+    otherAttribute: {
+        f1: boolean,
+        f2: number
+    };
+}
+
+class Edge {
+    label: string
+    source: Node1;
+    destination: Node2;
+}
+
+type Nodes = Node1 | Node2;
+type Edges = Edge;
+\end{verbatim}
 
 \section{Values}
 
@@ -260,7 +280,6 @@ graphs.
 
 \textbf{TODO: explain \(\Sigma\). Per Matt: ``An arguments that threads through the 
 object graph."}
-
 
 \begin{align*}
     \Value =& \StringV(\Type_1, \String_1) \quad\where \Type_1 <: \StringT \\
