@@ -62,6 +62,8 @@
 \maketitle
 \section{Intro}
 
+\textbf{change voice to ``We"}
+
 Sinap IDE is a program to allow editing of graph
 programs in various graph programming langauages. 
 Because it wants to be an editor for many different
@@ -134,8 +136,11 @@ the set of the elements of the list.
 
 ``\(\_\)'' represents a symbol that has been omitted for brevity.
 
+\textbf{Discuss the model here}
+
 \section{The Type System}
 
+\textbf{Move up}
 \textbf{TODO: edit this next paragraph}
 The goal of creating the above language (referred to as Sinap's 
 Type System) is to allow interpreter implementers to specify what 
@@ -149,8 +154,6 @@ via which edges.
 
 The data-description language is called the type system and has 
 the following structure:
-
-\textbf{TODO: motivate \(\LitT\)}
 
 \begin{align*}
 \begin{aligned}
@@ -185,8 +188,15 @@ the following structure:
 \end{aligned}  
 \end{align*}
 
+
+\textbf{TODO: motivate \(\LitT\)}
+\textbf{TODO: motivate \(\InterT\)}
+\textbf{Put above in figure? Walk though the figures again in prose}
+
 \subsection{Subtype Relations}
 
+\textbf{TODO: specifically \(\Gamma\) maps strings to object types}
+\textbf{TODO: parameterize <: over \(\Gamma\)}
 Define \(\bullet<:\bullet\)
 
 \begin{align*}
@@ -291,6 +301,8 @@ graphs.
 Note that Values are parameterized by \(\Sigma\), a ``store" that
 allows Values to reference other values without including their 
 whole structure. This allows for cycles. 
+
+\textbf{TODO: specifically \(\Sigma\) maps refs to values}
 
 \begin{align*}
     \Value =& \StringV(\Type_1, \String_1) \quad\where \Type_1 <: \StringT \\
@@ -415,5 +427,12 @@ Sinap types is useful for generically describing data-structures
 so that GUIs for their entry can be automatically generated. 
 
 \textbf{TODO: what do I even say here?}
+
+\textbf{Things that are not covered}
+
+\textbf{Discuss the python implementation}
+\textbf{Typescript}
+
+\textbf{Source/Destinantion, how is the model actually used?}
 
 \end{document}
