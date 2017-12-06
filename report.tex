@@ -8,6 +8,9 @@
     \usepackage{hyperref}
     \usepackage{multicol}
     \usepackage{amsmath,amssymb,amsfonts,amsthm}
+    \usepackage{dot2texi}
+    \usepackage{tikz}
+    \usetikzlibrary{shapes,arrows}
 
     \DeclareMathOperator{\StringT}{StringT}
     \DeclareMathOperator{\NumberT}{NumberT}
@@ -53,6 +56,10 @@
     \newcommand{\ValueRef}{\textref}
     \newcommand{\ValueDeref}[1]{\Sigma(#1)}
 \begin{document}
+
+\title{Sinap's Type System}
+\author{Sheyne Anderson}
+\maketitle
 \section{Intro}
 
 Sinap IDE is a program to allow editing of graph
@@ -70,16 +77,17 @@ automata (DFAs) edges should have a ``symbol" attribute of
 type character corresponding to the input by which this 
 edge should be followed. 
 
+\begin{figure}[h]
+    \label{sinap-screenshot}  
+    \centering
+    \includegraphics[width=.8\textwidth]{sinap-screenshot}
+    \caption{Sinap IDE editing a graph}
+\end{figure}
+
 As you can see in Figure \ref{sinap-screenshot}, Sinap's UI
 presents the user with nodes and edges which can be selected 
 and edited in the sidebar. Allowing the sidebar to change based
 on what interpreter is what the type-system facilitates. 
-
-\begin{figure} 
-    \label{sinap-screenshot}  
-    \includegraphics[width=\textwidth]{sinap-screenshot}
-    \caption{Sinap IDE editing a graph}
-\end{figure}
     
 Sinap's type–system consists of two parts:
 
@@ -113,6 +121,10 @@ Although there fields aren't limited to simple types and the
 whole structure can nest. \textbf{TODO: awkward phrasing, reword}. 
 
 \subsection{Notation}
+\textbf{TODO: Matt: Do I want to keep this section at all? If so,
+how should I expand it? Do I want to move the discussion 
+of \(\Sigma\) to here?}
+
 The symbol \((\operatorname{Kind}_1, ...)\) is equivalent to 
 \((\operatorname{Kind}_i)\). They are also equivalent to 
 \((\operatorname{Kind}_1, ..., \operatorname{Kind}_n)\)
@@ -276,14 +288,15 @@ Now that we have a description of valid graph structures for some
 interpreter, we need to define a language for describing specific 
 graphs. 
 
-\textbf{TODO: explain \(\Sigma\). Per Matt: ``An arguments that threads through the 
-object graph."}
+Note that Values are parameterized by \(\Sigma\), a ``store" that
+allows Values to reference other values without including their 
+whole structure. This allows for cycles. 
 
 \begin{align*}
     \Value =& \StringV(\Type_1, \String_1) \quad\where \Type_1 <: \StringT \\
     &| \NumberV(\Type_1, \Number_1) \quad\where \Type_1 <: \NumberT \\
     &| \BooleanV(\Type_1, \Boolean_1) \quad\where \Type_1 <: \BooleanT \\
-    &| \ObjV(\Type_1, V=((\String_1, \ValueRef_1), ...)) \quad\where 
+    &| \ObjV(\Type_1, V=((\String_1, \ValueRef_1]), ...)) \quad\where 
     \ObjPairsMatch(\ObjFields(\Type_1), V) \\
     &| \UnionV(\UnionT(..., \Type_i, ...), \ValueRef_1) \where
     \ValueType(\ValueRef_1) <: \Type_i\\
@@ -318,7 +331,89 @@ object graph."}
 \end{align*}
 
 A valid graph then matches 
-\[(\ListV(\ListT(\operatorname{Nodes}), \_), \ListV(\ListT(\operatorname{Edges}), \_))\]
-for some appropriate definition of Nodes and Edges.
+\[(\ListV(\ListT(\textit{Nodes}), \_), \ListV(\ListT(\textit{Edges}), \_))\]
+for some appropriate definition of \textit{Nodes} and \textit{Edges}.
+
+\subsection{Example}
+\begin{figure}[h]
+    \centering
+    \begin{dot2tex}[dot, scale=0.5]
+    digraph {
+        "Start Node" -> "End Node";
+    }
+    \end{dot2tex}
+    \caption{A simple graph}
+    \label{simplegraph}
+\end{figure}   
+To give an example, the simple graph given in Figure \ref{simplegraph} 
+might be modeled as:
+
+\newcommand{\treeDraw}[2]{#1 \left(\begin{aligned} &#2\end{aligned}\right)}
+\newcommand{\treeNext}{,\\&}
+\newcommand{\valRef}[1]{\ValueRef_\textit{#1}}
+\newcommand{\textq}[1]{\text{``#1"}}
+
+\begin{align*}
+    \Sigma(\valRef{0O})&=\ObjV(\ObjT_0, ())\\ 
+    \Sigma(\valRef{0U})&=\UnionV(\UnionT_0, \valRef{0O})\\
+    \Sigma(\valRef{1S})&=\treeDraw\StringV{\StringT_1, \textq{Start Node}}\\
+    \Sigma(\valRef{1O})&=\treeDraw\ObjV{\ObjT_1,\treeDraw{}{
+        (\textq{label}, \valRef{1S})\treeNext
+        (\textq{destination}, \valRef{3U})
+        }}\\
+    \Sigma(\valRef{1U})&=\treeDraw\UnionV{\UnionT_1, \valRef{1O}}\\
+    \Sigma(\valRef{2S})&=\treeDraw\StringV{\StringT_2, \textq{End Node}}\\
+    \Sigma(\valRef{2O})&=\treeDraw\ObjV{\ObjT_2,\treeDraw{}{
+        (\textq{label}, \valRef{2S})\treeNext
+        (\textq{destination}, \text{nil})
+        }}\\
+    \Sigma(\valRef{2U})&=\treeDraw\UnionV{\UnionT_2, \valRef{2O}}\\
+    \Sigma(\valRef{3O})&=\treeDraw\ObjV{\ObjT_3,\treeDraw{}{
+        (\textq{children}, \valRef{4})
+        }}\\
+    \Sigma(\valRef{3U})&=\treeDraw\UnionV{\UnionT_3, \valRef{3O}}\\
+    \Sigma(\valRef{4})&=\treeDraw\ListV{\ListT_4, (\valRef{2U})}\\
+    \textit{Nodes}_1 &= \treeDraw\ListV{\ListT_5, (\valRef{1U}, \valRef{2U})} \\
+    \textit{Edges}_1 &= \treeDraw\ListV{\ListT_6, (\valRef{3U})} \\
+\end{align*}
+
+
+\(\Sigma\) can probably better be understood Figure \ref{values-example}.
+
+\begin{figure}[h]
+    \centering
+    \begin{dot2tex}[fdp, scale=0.5]
+    digraph {
+        "1U" [label="UnionV (1U)"];
+        "2U" [label="UnionV (2U)"];
+        "3U" [label="UnionV (3U)"];
+        "1O" [label="ObjV (1O)"];
+        "2O" [label="ObjV (2O)"];
+        "3O" [label="ObjV (3O)"];
+        "1S" [label="StringV (1S)"];
+        "2S" [label="StringV (2S)"];
+        "3S" [label="StringV (3S)"];
+        "4" [label="ListV (4)"];
+        "1U" -> "1O";
+        "1O" -> "1S" [label="label"];
+        "2U" -> "2O" [label="label"];
+        "2O" -> "2S";
+        "3U" -> "3O";
+        "3O" -> "3S";
+        "1O" -> "3U" [label="destination"];
+        "2O" -> "0U" [label="destination"];
+        "3O" -> "4" [label="children"];
+        "4" -> "2U"
+    }
+    \end{dot2tex}
+\caption{A diagram of the example Values}
+\label{values-example}
+\end{figure}
+
+\section{Conclusion}
+Sinap types is useful for generically describing data-structures 
+so that GUIs for their entry can be automatically generated. 
+
+\textbf{TODO: what do I even say here?}
 
 \end{document}
