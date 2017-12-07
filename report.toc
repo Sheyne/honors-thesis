@@ -4,4 +4,4 @@
 \contentsline {subsection}{\numberline {2.2}Type Model}{2}{subsection.2.2}
 \contentsline {subsection}{\numberline {2.3}Subtype Relations}{3}{subsection.2.3}
 \contentsline {section}{\numberline {3}Values}{5}{section.3}
-\contentsline {section}{\numberline {4}Applications in Sinap IDE}{8}{section.4}
+\contentsline {section}{\numberline {4}Applications in Sinap IDE}{7}{section.4}

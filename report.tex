@@ -77,7 +77,7 @@ about the editor can be found at
 \href{https://2graphic.github.io}{2graphic.github.io}.
 Because our goal for Sinap IDE is to be an editor for many 
 different graph programming languages, we designed the user interface (UI)
-to adapt to best support the plugin that is currently loaded. 
+to adapt to best support whichever plugin that is currently loaded. 
 
 While editing a graph, components of the
 graph will have different attributes associated with them 
@@ -193,7 +193,7 @@ several kinds of types:
 \end{itemize}
 
 \(\Gamma\) is an 
-argument to the subtype relation which is used by ObjectSubtype to 
+argument to the subtype relation which is used by \(\ObjectSubtype\) to 
 lookup supertypes by name. These informal 
 descriptions of the various types are recognized formally 
 in Figure \ref{sinap-types-model}.
@@ -202,11 +202,10 @@ in Figure \ref{sinap-types-model}.
 \capstart
 \begin{mdframed}
 \begin{align*}
-\begin{aligned}
-\Type = &\LitT(\JSLit) \\
-&|\StringT \\
-&|\NumberT \\
-&|\BooleanT \\
+\Type = &\LitT(\JSLit)   &\JSLit = &\operatorname{JSString} \\
+&|\StringT                      &&| \operatorname{JSNumber} \\
+&|\NumberT                      &&| \operatorname{true} \\
+&|\BooleanT                     &&| \operatorname{false} \\
 &|\RecT((\String, \Type), ...) \\
 &|\ListT(\Type) \\
 &|\SetT(\Type) \\
@@ -217,21 +216,6 @@ in Figure \ref{sinap-types-model}.
 \end{aligned}\right) \\
 &|\InterT(\ObjT, ...) \\
 &|\UnionT(\Type, ...)\\
-\end{aligned}
-\quad\quad\quad\begin{aligned}        
-\begin{aligned}
-\JSLit = &\operatorname{JSString} \\
-&| \operatorname{JSNumber} \\
-&| \operatorname{true} \\
-&| \operatorname{false} \\
-\end{aligned}\\\\
-\begin{aligned}
-\JSTypeof(\operatorname{JSString}) &= \StringT \\
-\JSTypeof(\operatorname{JSNumber}) &= \NumberT \\
-\JSTypeof(\operatorname{true}) &= \BooleanT \\
-\JSTypeof(\operatorname{false}) &= \BooleanT \\
-\end{aligned}  
-\end{aligned}  
 \end{align*}
 \end{mdframed}
 \caption{Formal Description of Sinap Types}
@@ -400,7 +384,7 @@ might be modeled as is shown in Figure \ref{values-example1}.
 The values loaded into \(\Sigma\) in Figure \ref{values-example1} can probably 
 better be understood in Figure \ref{values-example2}.
 
-\begin{figure}
+\begin{figure}[h]
 \capstart
 \begin{mdframed}
 \begin{align*}
@@ -489,7 +473,7 @@ better be understood in Figure \ref{values-example2}.
     \textit{Edges}_1 &= \treeDraw\ListV{\ListT_6, (\valRef{3U})} \\
 \end{align*}
 \end{mdframed}
-\caption{}
+\caption{A representation of Figure \ref{simplegraph} in the Sinap Type System}
 \label{values-example1}
 \end{figure}
 
@@ -519,7 +503,7 @@ better be understood in Figure \ref{values-example2}.
         "4" -> "2U"
     }
     \end{dot2tex}
-\caption{A diagram of the example Values}
+\caption{A diagram of the Values in Figure \ref{values-example1}}
 \label{values-example2}
 \end{figure}
 
@@ -538,7 +522,7 @@ some invariants to specialize the Type System to graphs.
 This allows programmers writing interpreters to access connectivity information, 
 a critical element of creating a graph interpreter. 
 
-Sinap types is useful for generically describing data-structures so that 
+The Sinap Type System is useful for generically describing data-structures so that 
 user interfaces can specialize to handle them. We implemented Sinap's Type System
 as a TypeScript library that gives runtime access to the types 
 of all values used. We implemented loaders to build the type information 
