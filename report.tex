@@ -32,22 +32,22 @@
     \DeclareMathOperator{\Number}{Number}
     \DeclareMathOperator{\Boolean}{Boolean}
     \DeclareMathOperator{\type-ref}{ref}
-    \DeclareMathOperator{\Type}{Type_\Gamma}
+    \DeclareMathOperator{\Type}{{Type_\Gamma}}
     \DeclareMathOperator{\NoSuper}{NoSuper}
     \DeclareMathOperator{\InterOrObj}{InterOrObj}
     \DeclareMathOperator{\ObjectSubtype}{ObjectSubtype_\Gamma}
     \DeclareMathOperator{\RecordSubtype}{RecordSubtype}
-    \DeclareMathOperator{\Value}{Value_\Sigma}
+    \DeclareMathOperator{\Value}{Value_{\Gamma, \Sigma}}
     \DeclareMathOperator{\StringV}{StringV}
     \DeclareMathOperator{\NumberV}{NumberV}
     \DeclareMathOperator{\BooleanV}{BooleanV}
-    \DeclareMathOperator{\RecV}{RecV_\Sigma}
-    \DeclareMathOperator{\ObjV}{ObjV_\Sigma}
-    \DeclareMathOperator{\ListV}{ListV_\Sigma}
-    \DeclareMathOperator{\SetV}{SetV_\Sigma}
-    \DeclareMathOperator{\MapV}{MapV_\Sigma}
-    \DeclareMathOperator{\UnionV}{UnionV_\Sigma}
-    \DeclareMathOperator{\ValueType}{ValueType_\Sigma}
+    \DeclareMathOperator{\RecV}{RecV_{\Gamma, \Sigma}}
+    \DeclareMathOperator{\ObjV}{ObjV_{\Gamma, \Sigma}}
+    \DeclareMathOperator{\ListV}{ListV_{\Gamma, \Sigma}}
+    \DeclareMathOperator{\SetV}{SetV_{\Gamma, \Sigma}}
+    \DeclareMathOperator{\MapV}{MapV_{\Gamma, \Sigma}}
+    \DeclareMathOperator{\UnionV}{UnionV_{\Gamma, \Sigma}}
+    \DeclareMathOperator{\ValueType}{ValueType_{\Gamma, \Sigma}}
     \DeclareMathOperator{\textref}{ref}
     \DeclareMathOperator{\ObjFields}{ObjFields}
     \DeclareMathOperator{\ObjPairsMatch}{ObjPairsMatch}
@@ -235,16 +235,37 @@ in Figure \ref{sinap-types-model}.
 With types defined, it is necessary to define a subtype 
 relation (\(\bullet\subtype\bullet\)). Subtypes correspond 
 roughly to the idea that if \(A\subtype B\) then \(A\)
-can be used where \(B\) can be used. 
+can be used where \(B\) can be used. The subtype relation,
+as formally described in Figure \ref{subtype-definitions}, 
+defines literals as subtypes of there respective general types.
+For example \(\LitT(\text{``Hello"})\subtype\StringT\). It defines
+record subtypes structurally, that is all the supertype's fields 
+are present in the subtype and the types these fields in the subtype
+are subtypes of the corresponding fields in the supertype. 
+Objects are subtyped nominally, meaning that the supertype must be
+found somewhere in the subtype's inheritance chain. Unions are
+are subtypes of other unions as long as all of the types in the 
+subtype are subtypes of some type in the supertype. Intersections are 
+subtypes of other intersections if all the supertype's elements are 
+subtypes of all the elements of the suptertype. Additionally, 
+intersections are subtypes of objects that they contain. Lists, 
+Sets, and Maps are subtypes if their arguments are subtypes. This
+approach to collections is widespread and used in languages such
+as Java. It is technically not sound when paired with mutation 
+but works well most of the time in practice. \(\Gamma\) is an 
+argument to the subtype relation, so it can be threaded through 
+to object types, which use it to lookup supertypes by name. 
 
-\begin{figure}
+\begin{figure}[h]
 \begin{mdframed}        
 \begin{align*}
     \Type_1&\subtype\Type_1 \\
     \LitT(\JSLit_1)&\subtype\Type_1 &&\textif \JSTypeof(\JSLit_1) = \Type_1 \\
+    \UnionT(\Type_{1,1}, ...)&\subtype\UnionT(\Type_{2,1}, ...) 
+    &&\textif \forall T\in \{\Type_{1,i}\} \exists T' \in \{\Type_{2,i}\} \suchthat T\subtype T' \\
     \InterT(\Type_{1,1}, ...)&\subtype\InterT(\Type_{2,1}, ...) 
-    &&\textif \forall T\in \{\Type_{2,i}\} \exists T' \in \{\Type_{1,i}\} \suchthat T'\subtype T \\
-    \InterT(..., \Type_i, ...)&\subtype\ObjT_1 &&\textif \ObjT_1 = \Type_i  \\
+    &&\textif \forall T\in \{\Type_{1,i}\} \forall T' \in \{\Type_{2,i}\} T\subtype T' \\
+    \InterT(..., \Type_i, ...)&\subtype\ObjT_1 &&\textif \Type_i\subtype\ObjT_1  \\
     \ObjT_1 &\subtype \ObjT(\String_1, \_, \_) &&\textif \ObjectSubtype(\String_1, \ObjT_1)\\
     \RecT_1&\subtype\RecT_2 &&\textif \RecordSubtype(\RecT_1, \RecT_2) \\
     \ListT(\Type_1)&\subtype\ListT(\Type_2) &&\textif \Type_1\subtype\Type_2 \\
@@ -269,21 +290,12 @@ can be used where \(B\) can be used.
 \label{subtype-definitions}
 \end{figure}
 
-Note that this actually allows for some weirdness, because 
-we lose some of the restrictions of the subtype Map when using
-it as the supertype. This is incredibly unlikely in the use case 
-of Sinap because data aren't reused between different nodes and
-edges. 
-
-Records are structurally typed, two records with the same structure have
-the same type. Objects are nominally typed, so the type system needs some
-notion of references to support them. 
-
 While Sinap's Type System is implemented as a library and can have 
 concrete syntaxes in several languages, our most mature implementation 
 is in TypeScript. 
 
-An example of how this translation is applied is given in Figure \ref{types-example}. 
+An example of how TypeScript can be converted into this form is given in 
+Figures \ref{types-example} and \ref{types-example-code}. 
 
 \begin{figure}
 \begin{mdframed}
@@ -319,8 +331,6 @@ An example of how this translation is applied is given in Figure \ref{types-exam
 \caption{An example of an interpreter's description of valid graphs}
 \label{types-example}
 \end{figure}
-The types described in Figure \ref{types-example} are
-can be written in TypeScript as shown in Figure \ref{types-example-code}.
 
 \begin{figure}
 \begin{mdframed}    
