@@ -6,6 +6,7 @@
     \usepackage{mathtools}
     \usepackage[utf8]{inputenc}
     \usepackage{hyperref}
+    \usepackage[figure]{hypcap}
     \usepackage{multicol}
     \usepackage{amsmath,amssymb,amsfonts,amsthm}
     \usepackage{dot2texi}
@@ -67,34 +68,36 @@
 \tableofcontents
 
 \section{Intro}
-Sinap IDE is a program to allow editing of graph
-programs in various graph programming langauages. Each of these 
+Sinap IDE is an integrated development environment for various 
+graph programing languages. Each of these 
 languages is loaded into Sinap as a ``plugin" and is 
-referred to as an interpreter. More information 
+referred to as an interpreter (since it runs programs dynamically). 
+More information 
 about the editor can be found at 
 \href{https://2graphic.github.io}{2graphic.github.io}.
-Because the goal of Sinap IDE is to be an editor for many 
-different graph-languages we designed the user interface (UI)
-to change to best support the plugin that is currently loaded. 
+Because our goal for Sinap IDE is to be an editor for many 
+different graph programming languages, we designed the user interface (UI)
+to adapt to best support the plugin that is currently loaded. 
 
-The idea is that while editing a graph, components of the
+While editing a graph, components of the
 graph will have different attributes associated with them 
 that the editor should present contextually. For example, in
 a graph-language describing deterministic finite-state 
 automata (DFAs) edges should have a ``symbol" attribute of 
-type character corresponding to the input by which this 
+type \texttt{character} corresponding to the input by which this 
 edge should be followed. 
 
 \begin{figure}
+    \capstart
     \centering
     \includegraphics[width=.8\textwidth]{sinap-screenshot}
     \caption{Sinap IDE editing a graph}
     \label{sinap-screenshot}  
 \end{figure}
 
-As you can see in Figure \ref{sinap-screenshot}, Sinap's UI
+In Figure \ref{sinap-screenshot}, Sinap's UI
 presents the user with nodes and edges which can be selected 
-and edited in the sidebar. Allowing the sidebar to change based
+and edited in the sidebar. Allowing the sidebar and other UI components to change based
 on which interpreter is loaded is the purpose of Sinap's Type System. 
 This document presents a model for the type system. 
     
@@ -113,8 +116,8 @@ The code for both can be found at
 {github.com/2graphic/sinap-types}.
 
 The data that are allowable in the sidebar can be more complicated than
-simple strings and numbers. Figure \ref{sinap-screenshot}, the ``Position" attribute
-of the node has a structure that similar to the following TypeScript code:
+simple strings and numbers. In Figure \ref{sinap-screenshot}, the ``Position" attribute
+of the node has a structure similar to the following TypeScript code:
 
 \begin{samepage}
 \begin{verbatim}
@@ -128,13 +131,13 @@ type Point = {
 Complex types aren't limited to fields directly on nodes and edges,
 and can be arbitrarily nested. 
 
-The goal of creating Sinap's Type System is to allow interpreter 
+The goal of creating Sinap's Type System is to allow plugin/interpreter
 implementers to specify what 
 kinds of graphs are valid for their interpreter. This means that 
 the interpreter specifies the various fields on nodes and edges 
 and can assume that those fields are present on all of the graph elements
-that it receives. It also allows different kinds of nodes and edges to
-exist in the same graph and allows for rules defining what kinds of
+that it receives. The Type System also allows different kinds of nodes and 
+edges to exist in the same graph and allows for rules defining what kinds of
 nodes can connect to which edges. 
 
 \section{Types}
@@ -164,7 +167,7 @@ several kinds of types:
     \item \(\NumberT\) is a type matching all numbers.
     \item \(\BooleanT\) is a type matching all booleans.
     \item \(\RecT((\String, \Type)...)\) is a type for records. 
-    The arguments come in pairs of \((\String, \Type)\) where
+    The arguments come in pairs where
     \(\String\) is the name of some field and \(\Type\) is the
     type of that field.
     \item \(\ListT(\Type)\) is a type for homogeneous lists. The
@@ -189,10 +192,14 @@ several kinds of types:
      \NumberT)\).
 \end{itemize}
 
-These informal descriptions of the various types is recognized formally 
+\(\Gamma\) is an 
+argument to the subtype relation which is used by ObjectSubtype to 
+lookup supertypes by name. These informal 
+descriptions of the various types are recognized formally 
 in Figure \ref{sinap-types-model}.
 
 \begin{figure}
+\capstart
 \begin{mdframed}
 \begin{align*}
 \begin{aligned}
@@ -251,13 +258,13 @@ subtypes of other intersections if all the supertype's elements are
 subtypes of all the elements of the suptertype. Additionally, 
 intersections are subtypes of objects that they contain. Lists, 
 Sets, and Maps are subtypes if their arguments are subtypes. This
-approach to collections is widespread and used in languages such
-as Java. It is technically not sound when paired with mutation 
-but works well most of the time in practice. \(\Gamma\) is an 
-argument to the subtype relation, so it can be threaded through 
-to object types, which use it to lookup supertypes by name. 
+contravariant approach to collection subtyping is widespread and 
+used in languages such as Java. While it's technically not sound
+when paired with mutation, it works well in practice. For 
+the Sinap IDE use-case it doesn't come up. 
 
 \begin{figure}
+\capstart
 \begin{mdframed}        
 \begin{align*}
     (\Type)_1&\subtype(\Type)_1 \\
@@ -278,6 +285,7 @@ to object types, which use it to lookup supertypes by name.
 \label{subtype-definitions}
 \end{figure}
 \begin{figure}
+\capstart
 \begin{mdframed}        
 \begin{align*}
     \ObjectSubtype(\String_1, \ObjT(\String_2,\_, \_)) \quad &\textif 
@@ -305,6 +313,7 @@ An example of how TypeScript can be converted into this form is given in
 Figures \ref{types-example} and \ref{types-example-code}. 
 
 \begin{figure}
+\capstart
 \begin{mdframed}
 \begin{align*}
     \text{Nodes} = &\UnionT\left(
@@ -340,6 +349,7 @@ Figures \ref{types-example} and \ref{types-example-code}.
 \end{figure}
 
 \begin{figure}
+\capstart
 \begin{mdframed}    
 \begin{multicols}{2}
 \begin{verbatim}
@@ -347,7 +357,6 @@ class Node1 {
     label: string;
     customAttribute: number;
 }
-
 class Node2 {
     label: string;
     otherAttribute: {
@@ -355,15 +364,17 @@ class Node2 {
         f2: number
     };
 }
-
 class Edge {
     label: string
     source: Node1;
     destination: Node2;
 }
-
 type Nodes = Node1 | Node2;
 type Edges = Edge;
+
+
+
+
 \end{verbatim}
 \end{multicols}
 \end{mdframed}
@@ -373,16 +384,24 @@ type Edges = Edge;
 
 \section{Values}
 
-Now that we have a description of valid graph structures for some
+Having presented a description of valid graph structures for some
 interpreter, we need to define a language for describing specific 
 graphs. 
-
 Note that Values are parameterized by \(\Sigma\), a ``store" that
-maps \(\ValueRef\)s to \(\Value\)s. 
-
+maps \(\ValueRef\)s to \(\Value\)s. I present a formal specification of
+\(\Value\) can be found in Figure \ref{value-definition}.
 Each kind of Value has a type and a body which holds the value that 
 goes with the type. 
+A valid graph then is defined by 
+\[(\ListV(\ListT(\textit{Nodes}), \_), \ListV(\ListT(\textit{Edges}), \_))\]
+for some appropriate definition of \textit{Nodes} and \textit{Edges}.
+To give an example, the simple graph given in Figure \ref{simplegraph} 
+might be modeled as is shown in Figure \ref{values-example1}.
+The values loaded into \(\Sigma\) in Figure \ref{values-example1} can probably 
+better be understood in Figure \ref{values-example2}.
+
 \begin{figure}
+\capstart
 \begin{mdframed}
 \begin{align*}
     \Value =& \StringV((\Type)_1, \String_1) \quad\where (\Type)_1 \subtype \StringT \\
@@ -426,12 +445,8 @@ goes with the type.
 \label{value-definition}
 \end{figure}
 
-A valid graph then matches 
-\[(\ListV(\ListT(\textit{Nodes}), \_), \ListV(\ListT(\textit{Edges}), \_))\]
-for some appropriate definition of \textit{Nodes} and \textit{Edges}.
-
-\subsection{Example}
 \begin{figure}
+    \capstart
     \centering
     \begin{dot2tex}[dot, scale=0.5]
     digraph {
@@ -441,10 +456,6 @@ for some appropriate definition of \textit{Nodes} and \textit{Edges}.
     \caption{A simple graph}
     \label{simplegraph}
 \end{figure}   
-To give an example, the simple graph given in Figure \ref{simplegraph} 
-might be modeled as is shown in Figure \ref{values-example1}.
-The values loaded into \(\Sigma\) in Figure \ref{values-example1} can probably 
-better be understood Figure \ref{values-example2}.
 
 \newcommand{\treeDraw}[2]{#1 \left(\begin{aligned} &#2\end{aligned}\right)}
 \newcommand{\treeNext}{,\\&}
@@ -452,6 +463,7 @@ better be understood Figure \ref{values-example2}.
 \newcommand{\textq}[1]{\text{``#1"}}
 
 \begin{figure}
+\capstart
 \begin{mdframed}
 \begin{align*}
     \Sigma(\valRef{0O})&=\ObjV(\ObjT_0, ())\\ 
@@ -482,25 +494,25 @@ better be understood Figure \ref{values-example2}.
 \end{figure}
 
 \begin{figure}
+    \capstart
     \centering
-    \begin{dot2tex}[fdp, scale=0.5]
+    \begin{dot2tex}[dot, scale=0.5]
     digraph {
-        "1U" [label="UnionV (1U)"];
-        "2U" [label="UnionV (2U)"];
-        "3U" [label="UnionV (3U)"];
-        "1O" [label="ObjV (1O)"];
-        "2O" [label="ObjV (2O)"];
-        "3O" [label="ObjV (3O)"];
-        "1S" [label="StringV (1S)"];
-        "2S" [label="StringV (2S)"];
-        "3S" [label="StringV (3S)"];
-        "4" [label="ListV (4)"];
+        {rank = same; "1U"; "3U"; "2U";}
+        "1U" [label="1U : UnionV"];
+        "2U" [label="2U : UnionV"];
+        "3U" [label="3U : UnionV"];
+        "1O" [label="1O : ObjV"];
+        "2O" [label="2O : ObjV"];
+        "3O" [label="3O : ObjV"];
+        "1S" [label="1S : StringV = Start Node"];
+        "2S" [label="2S : StringV = End Node"];
+        "4" [label="4 : ListV"];
         "1U" -> "1O";
         "1O" -> "1S" [label="label"];
         "2U" -> "2O" [label="label"];
         "2O" -> "2S";
         "3U" -> "3O";
-        "3O" -> "3S";
         "1O" -> "3U" [label="destination"];
         "2O" -> "0U" [label="destination"];
         "3O" -> "4" [label="children"];
@@ -511,22 +523,13 @@ better be understood Figure \ref{values-example2}.
 \label{values-example2}
 \end{figure}
 
-\section{Conclusion}
+\section{Applications in Sinap IDE}
 
-Sinap types is useful for generically describing data-structures 
-so that GUIs for their entry can be automatically generated. We implemented the 
-above as a TypeScript library that gives runtime access to the types 
-of all values used. We implemented loaders to build the type information 
-for this library from TypeScript source code and to build it dynamically from 
-Python. This allows Sinap Plugins to be built in Python or TypeScript. 
-The TypeScript implementation is especially powerful because essentially 
-no thought needs to be given to Sinap IDE while writing an interpreter. 
-
-When using the Sinap Type-System for to create the IDE we added 
+When using the Sinap Type-System to create the IDE we added 
 some invariants to specialize the Type System to graphs. 
 \begin{enumerate}
     \item There must be types Nodes and Edges which are unions of \(\ObjT\) subtypes. 
-    \item If any Edge type specifies ``source'' or ``destination'', it must be a Node subtype
+    \item If any Edges type specifies ``source'' or ``destination'', it must be a Nodes subtype
     and its type will be respected and added as a constraint when creating graphs.
     \item The same goes for Nodes, except that the names are ``children'' and 
     ``parents'' and the types have to be lists of edges.
@@ -534,5 +537,15 @@ some invariants to specialize the Type System to graphs.
 
 This allows programmers writing interpreters to access connectivity information, 
 a critical element of creating a graph interpreter. 
+
+Sinap types is useful for generically describing data-structures so that 
+user interfaces can specialize to handle them. We implemented Sinap's Type System
+as a TypeScript library that gives runtime access to the types 
+of all values used. We implemented loaders to build the type information 
+for this library from TypeScript source code and to build it dynamically from 
+Python. This allows Sinap Plugins to be built in Python or TypeScript. 
+The TypeScript implementation is especially powerful it allows programmers 
+to create an interpreter for a graph based language and have it work with 
+Sinap IDE with little to no extra effort. 
 
 \end{document}
