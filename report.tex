@@ -10,6 +10,7 @@
     \usepackage{amsmath,amssymb,amsfonts,amsthm}
     \usepackage{dot2texi}
     \usepackage{tikz}
+    \usepackage{mdframed}
     \usetikzlibrary{shapes,arrows}
 
     \DeclareMathOperator{\StringT}{StringT}
@@ -18,28 +19,28 @@
     \DeclareMathOperator{\LitT}{LitT}
     \DeclareMathOperator{\JSLit}{JSLit}
     \DeclareMathOperator{\JSTypeof}{JSTypeof}
-    \DeclareMathOperator{\RecT}{RecT}
-    \DeclareMathOperator{\ObjT}{ObjT}
-    \DeclareMathOperator{\ListT}{ListT}
-    \DeclareMathOperator{\SetT}{SetT}
-    \DeclareMathOperator{\MapT}{MapT}
+    \DeclareMathOperator{\RecT}{RecT_\Gamma}
+    \DeclareMathOperator{\ObjT}{ObjT_\Gamma}
+    \DeclareMathOperator{\ListT}{ListT_\Gamma}
+    \DeclareMathOperator{\SetT}{SetT_\Gamma}
+    \DeclareMathOperator{\MapT}{MapT_\Gamma}
     \DeclareMathOperator{\ObjType}{ObjType}
-    \DeclareMathOperator{\UnionT}{UnionT}
-    \DeclareMathOperator{\InterT}{InterT}
-    \DeclareMathOperator{\LookupObjRef}{LookupObjRef}
+    \DeclareMathOperator{\UnionT}{UnionT_\Gamma}
+    \DeclareMathOperator{\InterT}{InterT_\Gamma}
+    \DeclareMathOperator{\LookupObjRef}{\Gamma}
     \DeclareMathOperator{\String}{String}
     \DeclareMathOperator{\Number}{Number}
     \DeclareMathOperator{\Boolean}{Boolean}
     \DeclareMathOperator{\type-ref}{ref}
-    \DeclareMathOperator{\Type}{Type}
+    \DeclareMathOperator{\Type}{Type_\Gamma}
     \DeclareMathOperator{\NoSuper}{NoSuper}
     \DeclareMathOperator{\InterOrObj}{InterOrObj}
-    \DeclareMathOperator{\ObjectSubtype}{ObjectSubtype}
+    \DeclareMathOperator{\ObjectSubtype}{ObjectSubtype_\Gamma}
     \DeclareMathOperator{\RecordSubtype}{RecordSubtype}
     \DeclareMathOperator{\Value}{Value_\Sigma}
-    \DeclareMathOperator{\StringV}{StringV_\Sigma}
-    \DeclareMathOperator{\NumberV}{NumberV_\Sigma}
-    \DeclareMathOperator{\BooleanV}{BooleanV_\Sigma}
+    \DeclareMathOperator{\StringV}{StringV}
+    \DeclareMathOperator{\NumberV}{NumberV}
+    \DeclareMathOperator{\BooleanV}{BooleanV}
     \DeclareMathOperator{\RecV}{RecV_\Sigma}
     \DeclareMathOperator{\ObjV}{ObjV_\Sigma}
     \DeclareMathOperator{\ListV}{ListV_\Sigma}
@@ -55,6 +56,7 @@
     \DeclareMathOperator{\suchthat}{s.t.}
     \newcommand{\ValueRef}{\textref}
     \newcommand{\ValueDeref}[1]{\Sigma(#1)}
+    \newcommand{\subtype}{<:_\Gamma}
 \begin{document}
 
 \title{Sinap's Type System}
@@ -65,11 +67,14 @@
 \textbf{TODO:change voice to ``We"}
 
 Sinap IDE is a program to allow editing of graph
-programs in various graph programming langauages. 
-Because it wants to be an editor for many different
-graph-languages, a pluggable architecture was designed
-so that Sinap could change its user interface (UI)
-to best support each language. 
+programs in various graph programming langauages. Each of these 
+languages are loaded into Sinap as ``plugins" and are 
+referred to as interpreters. More information 
+about the editor can be found at 
+\href{https://2graphic.github.io}{2graphic.github.io}.
+Because the goal of Sinap IDE is to be an editor for many 
+different graph-languages we designed the user interface (UI)
+to change to best support the plugin that is currently loaded. 
 
 The idea is that while editing a graph, components of the
 graph will have different attributes associated with them 
@@ -80,18 +85,19 @@ type character corresponding to the input by which this
 edge should be followed. 
 
 \begin{figure}[h]
-    \label{sinap-screenshot}  
     \centering
     \includegraphics[width=.8\textwidth]{sinap-screenshot}
     \caption{Sinap IDE editing a graph}
+    \label{sinap-screenshot}  
 \end{figure}
 
 As you can see in Figure \ref{sinap-screenshot}, Sinap's UI
 presents the user with nodes and edges which can be selected 
 and edited in the sidebar. Allowing the sidebar to change based
-on what interpreter is what the type-system facilitates. 
+on which interpreter is loaded is the purpose of Sinap's Type System. 
+This document is presents a model for the type system. 
     
-Sinap's type–system consists of two parts:
+Sinap's Type System consists of two parts:
 
 \begin{enumerate}
     \item A data-language to describe graph components 
@@ -102,9 +108,8 @@ Sinap's type–system consists of two parts:
 \end{enumerate}
 
 The code for both can be found at 
-
 \href{https://github.com/2graphic/sinap-types}
-{https://github.com/2graphic/sinap-types}.
+{github.com/2graphic/sinap-types}.
 
 The data that are allowable in the sidebar can be more complicated than
 simple strings and numbers. In the example above the ``Position" attribute
@@ -119,13 +124,21 @@ type Point = {
 \end{verbatim}
 \end{samepage}
 
-Although there fields aren't limited to simple types and the 
-whole structure can nest. \textbf{TODO: awkward phrasing, reword}. 
+Complex types aren't limited to fields directly on nodes and edges,
+and can be arbitrarily nested. 
+
+The goal of creating Sinap's Type System is to allow interpreter 
+implementers to specify what 
+kinds of graphs are valid for their interpreter. This means that 
+the interpreter specifies the various fields on nodes and edges 
+and can assume that those fields are present on all of the graph elements
+that it receives. It also allows different kinds of nodes and edges to
+exist in the same graph and allows for rules defining what kinds of
+nodes can connect to which edges. 
+
+\section{Types}
 
 \subsection{Notation}
-\textbf{TODO: Matt: Do I want to keep this section at all? If so,
-how should I expand it? Do I want to move the discussion 
-of \(\Sigma\) to here?}
 
 The symbol \((\operatorname{Kind}_1, ...)\) is equivalent to 
 \((\operatorname{Kind}_i)\). They are also equivalent to 
@@ -136,25 +149,50 @@ the set of the elements of the list.
 
 ``\(\_\)'' represents a symbol that has been omitted for brevity.
 
-\textbf{TODO:Discuss the model here}
+\subsection{Type Model}
+The data-description language is called Sinap Types. There are 
+several kinds of types:
 
-\section{The Type System}
+\begin{itemize}
+    \item \(\LitT(\JSLit)\) is the type for literal primitives. That is
+    string, number, and boolean literals. 
+    Examples include \(\LitT(17), \LitT(\text{``Hello"}), \text{ and } 
+    \LitT(false)\). A value will match this type if and only if it is
+    exactly the value of the literal in the type. 
+    \item \(\StringT\) is a type matching all strings.
+    \item \(\NumberT\) is a type matching all numbers.
+    \item \(\BooleanT\) is a type matching all booleans.
+    \item \(\RecT((\String, \Type)...)\) is a type for records. 
+    The arguments come in pairs of \((\String, \Type)\) where
+    \(\String\) is the name of some field and \(\Type\) is the
+    type of that field.
+    \item \(\ListT(\Type)\) is a type for homogeneous lists. The
+    parameter is the type of all the elements of the list. 
+    \item \(\SetT(\Type)\) is a type for an unordered collection
+    of elements of type \(\Type\).
+    \item \(\MapT(\Type_1, \Type_2)\) is the type of a mapping from 
+    \(\Type_1\) to \(\Type_2\).
+    \item \(\ObjT(\String, \String | \NoSuper, ((\String, \Type), ...))\)
+    describes an object type. Its name is the first argument, 
+    its super-type is the second argument, and the new fields 
+    it introduces is the tuple of (key, value) pairs that form the
+    last argument. 
+    \item \(\InterT(\ObjT,  ...)\) is the intersection of several 
+    object types and acts like a single object type with all the 
+    properties of the intersected types. 
+    \item \(\UnionT(\Type, ...)\) is a union of several types. 
+    Values with this type act as a collection with a single element
+    whose type is one of the \(\{\Type_i\}\). In Sinap, a drop down 
+    menu that allows ``Narrow'', ``Wide'', or some number would be 
+    typed as \(\UnionT(\LitT(``\text{Narrow}"), \LitT(``\text{Wide}"),
+     \NumberT)\).
+\end{itemize}
 
-\textbf{TODO:Move up}
-\textbf{TODO: edit this next paragraph}
-The goal of creating the above language (referred to as Sinap's 
-Type System) is to allow interpreter implementers to specify what 
-kinds of graphs are valid for their interpreter. This means that 
-graphs can allow various fields on nodes and edges and the interpreter
-can guarantee that the fields are present on all of the nodes that it
-is passed. It also allows different kinds of nodes and edges to be 
-specified and for rules to exists defining what kinds of nodes can 
-via which edges. 
+These informal descriptions of the various types is recognized formally 
+in Figure \ref{sinap-types-model}.
 
-
-The data-description language is called the type system and has 
-the following structure:
-
+\begin{figure}
+\begin{mdframed}
 \begin{align*}
 \begin{aligned}
 \Type = &\LitT(\JSLit) \\
@@ -187,29 +225,31 @@ the following structure:
 \end{aligned}  
 \end{aligned}  
 \end{align*}
-
-
-\textbf{TODO: motivate \(\LitT\)}
-\textbf{TODO: motivate \(\InterT\)}
-\textbf{TODO: Put above in figure? Walk though the figures again in prose}
+\end{mdframed}
+\caption{Formal Description of Sinap Types}
+\label{sinap-types-model}
+\end{figure}
 
 \subsection{Subtype Relations}
 
-\textbf{TODO: specifically \(\Gamma\) maps strings to object types}
-\textbf{TODO: parameterize <: over \(\Gamma\)}
-Define \(\bullet<:\bullet\)
+With types defined, it is necessary to define a subtype 
+relation (\(\bullet\subtype\bullet\)). Subtypes correspond 
+roughly to the idea that if \(A\subtype B\) then \(A\)
+can be used where \(B\) can be used. 
 
+\begin{figure}
+\begin{mdframed}        
 \begin{align*}
-    \Type_1&<:\Type_1 \\
-    \LitT(\JSLit_1)&<:\Type_1 &&\textif \JSTypeof(\JSLit_1) = \Type_1 \\
-    \InterT(\Type_{1,1}, ..., \Type_{1,n})&<:\InterT(\Type_{2,1}, ..., Type_{2,m}) 
-    &&\textif \forall T\in \{\Type_{2,i}\} \exists T' \in \{\Type_{1,i}\} \suchthat T'<:T \\
-    \InterT(..., \Type_i, ...)&<:\ObjT_1 &&\textif \ObjT_1 = \Type_i  \\
-    \ObjT_1 &<: \ObjT(\String_1, \_, \_) &&\textif \ObjectSubtype(\String_1, \ObjT_1)\\
-    \RecT_1&<:\RecT_2 &&\textif \RecordSubtype(\RecT_1, \RecT_2) \\
-    \ListT(\Type_1)&<:\ListT(\Type_2) &&\textif \Type_1<:\Type_2 \\
-    \SetT(\Type_1)&<:\SetT(\Type_2) &&\textif \Type_1<:\Type_2 \\
-    \MapT(\Type_{11}, \Type_{12})&<:\MapT(\Type_{21}, \Type_{22}) &&\textif \Type_{11}<:\Type_{21} \text{ and } \Type_{12}<:\Type_{22} \\
+    \Type_1&\subtype\Type_1 \\
+    \LitT(\JSLit_1)&\subtype\Type_1 &&\textif \JSTypeof(\JSLit_1) = \Type_1 \\
+    \InterT(\Type_{1,1}, ...)&\subtype\InterT(\Type_{2,1}, ...) 
+    &&\textif \forall T\in \{\Type_{2,i}\} \exists T' \in \{\Type_{1,i}\} \suchthat T'\subtype T \\
+    \InterT(..., \Type_i, ...)&\subtype\ObjT_1 &&\textif \ObjT_1 = \Type_i  \\
+    \ObjT_1 &\subtype \ObjT(\String_1, \_, \_) &&\textif \ObjectSubtype(\String_1, \ObjT_1)\\
+    \RecT_1&\subtype\RecT_2 &&\textif \RecordSubtype(\RecT_1, \RecT_2) \\
+    \ListT(\Type_1)&\subtype\ListT(\Type_2) &&\textif \Type_1\subtype\Type_2 \\
+    \SetT(\Type_1)&\subtype\SetT(\Type_2) &&\textif \Type_1\subtype\Type_2 \\
+    \MapT(\Type_{11}, \Type_{12})&\subtype\MapT(\Type_{21}, \Type_{22}) &&\textif \Type_{11}\subtype\Type_{21} \text{ and } \Type_{12}\subtype\Type_{22} \\
 \end{align*}
 \begin{align*}
     \ObjectSubtype(\String_1, \ObjT(\String_2,\_, \_)) \quad &\textif 
@@ -218,10 +258,17 @@ Define \(\bullet<:\bullet\)
     \quad \ObjectSubtype(\String_1, \LookupObjRef(\String_2)))
 \end{align*}
 \begin{align*}
-    \RecordSubtype(\RecT((\String_{1,1}, \Type_{1, 1}), ..., (\String_{1,n}, \Type_{1, n})), \RecT((\String_{2,1}, \Type_{2, 1}), ..., (\String_{2,m}, \Type_{2, m}))) \\
-    \textif \{\String_{2,i}\} \subset \{\String_{1,i}\} \text{ and } \String_{1, i} = \String_{2, j} \implies \Type_{1, i} <: \Type_{2, j}
+    \RecordSubtype &\left(\begin{aligned}
+        &\RecT((\String_{1,1}, \Type_{1, 1}), ..., (\String_{1,n}, \Type_{1, n})), \\
+        &\RecT((\String_{2,1}, \Type_{2, 1}), ..., (\String_{2,m}, \Type_{2, m}))
+    \end{aligned}\right) \\
+    &\textif \{\String_{2,i}\} \subset \{\String_{1,i}\} \text{ and } \String_{1, i} = \String_{2, j} \implies \Type_{1, i} \subtype \Type_{2, j}
 \end{align*}
-    
+\end{mdframed}        
+    \caption{Rules for the subtype relation (\(\bullet\subtype\bullet\))}
+\label{subtype-definitions}
+\end{figure}
+
 Note that this actually allows for some weirdness, because 
 we lose some of the restrictions of the subtype Map when using
 it as the supertype. This is incredibly unlikely in the use case 
@@ -236,8 +283,10 @@ While Sinap's Type System is implemented as a library and can have
 concrete syntaxes in several languages, our most mature implementation 
 is in TypeScript. 
 
-An example of how this translation is applied is given below.
+An example of how this translation is applied is given in Figure \ref{types-example}. 
 
+\begin{figure}
+\begin{mdframed}
 \begin{align*}
     \text{Nodes} = &\UnionT\left(
         \begin{aligned}
@@ -266,8 +315,15 @@ An example of how this translation is applied is given below.
             (&\text{``destination"}, \ObjT(\text{``Node2"}, \_, \_)) \\             
         \end{aligned}\right)\right)\right)
 \end{align*}
-The above is equivalent to the following TypeScript:
+\end{mdframed}
+\caption{An example of an interpreter's description of valid graphs}
+\label{types-example}
+\end{figure}
+The types described in Figure \ref{types-example} are
+can be written in TypeScript as shown in Figure \ref{types-example-code}.
 
+\begin{figure}
+\begin{mdframed}    
 \begin{verbatim}
 class Node1 {
     label: string;
@@ -291,6 +347,10 @@ class Edge {
 type Nodes = Node1 | Node2;
 type Edges = Edge;
 \end{verbatim}
+\end{mdframed}
+\caption{TypeScript code to go with Figure \ref{types-example}}
+\label{types-example-code}
+\end{figure}
 
 \section{Values}
 
@@ -305,19 +365,19 @@ whole structure. This allows for cycles.
 \textbf{TODO: specifically \(\Sigma\) maps refs to values}
 
 \begin{align*}
-    \Value =& \StringV(\Type_1, \String_1) \quad\where \Type_1 <: \StringT \\
-    &| \NumberV(\Type_1, \Number_1) \quad\where \Type_1 <: \NumberT \\
-    &| \BooleanV(\Type_1, \Boolean_1) \quad\where \Type_1 <: \BooleanT \\
+    \Value =& \StringV(\Type_1, \String_1) \quad\where \Type_1 \subtype \StringT \\
+    &| \NumberV(\Type_1, \Number_1) \quad\where \Type_1 \subtype \NumberT \\
+    &| \BooleanV(\Type_1, \Boolean_1) \quad\where \Type_1 \subtype \BooleanT \\
     &| \ObjV(\Type_1, V=((\String_1, \ValueRef_1]), ...)) \quad\where 
     \ObjPairsMatch(\ObjFields(\Type_1), V) \\
     &| \UnionV(\UnionT(..., \Type_i, ...), \ValueRef_1) \where
-    \ValueType(\ValueRef_1) <: \Type_i\\
-    &| \ListV(\ListT(\Type_1), (\ValueRef_1, ...)) \where \ValueType(\ValueRef_i) <: \Type_1 \\
-    &| \SetV(\SetT(\Type_1), \{\ValueRef_1, ...\}) \where \ValueType(\ValueRef_i) <: \Type_1 \\
+    \ValueType(\ValueRef_1) \subtype \Type_i\\
+    &| \ListV(\ListT(\Type_1), (\ValueRef_1, ...)) \where \ValueType(\ValueRef_i) \subtype \Type_1 \\
+    &| \SetV(\SetT(\Type_1), \{\ValueRef_1, ...\}) \where \ValueType(\ValueRef_i) \subtype \Type_1 \\
     &| \MapV(\MapT(\Type_1, \Type_2), ((\ValueRef_{1,1}, \ValueRef_{2,1}), ...)) \where \bigwedge
     \begin{aligned}
-        \ValueType(\ValueRef_{1, i}) <: \Type_1 \\
-        \ValueType(\ValueRef_{2, i}) <: \Type_2 
+        \ValueType(\ValueRef_{1, i}) \subtype \Type_1 \\
+        \ValueType(\ValueRef_{2, i}) \subtype \Type_2 
     \end{aligned}\\
 \end{align*}
 
@@ -339,7 +399,7 @@ whole structure. This allows for cycles.
 \end{align*}
 \begin{align*}
     \ObjPairsMatch(((\String_1, \Type_1),...), ((\String_1, \ValueRef_1), ...)) 
-    \textif \forall i, \ValueType(\Value_i) <: \Type_i
+    \textif \forall i, \ValueType(\Value_i) \subtype \Type_i
 \end{align*}
 
 A valid graph then matches 
