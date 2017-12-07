@@ -11,6 +11,7 @@
     \usepackage{dot2texi}
     \usepackage{tikz}
     \usepackage{mdframed}
+    \usepackage[section]{placeins}
     \usetikzlibrary{shapes,arrows}
 
     \DeclareMathOperator{\StringT}{StringT}
@@ -63,13 +64,10 @@
 \author{Sheyne Anderson}
 \maketitle
 \section{Intro}
-
-\textbf{TODO:change voice to ``We"}
-
 Sinap IDE is a program to allow editing of graph
 programs in various graph programming langauages. Each of these 
-languages are loaded into Sinap as ``plugins" and are 
-referred to as interpreters. More information 
+languages is loaded into Sinap as a ``plugin" and is 
+referred to as an interpreter. More information 
 about the editor can be found at 
 \href{https://2graphic.github.io}{2graphic.github.io}.
 Because the goal of Sinap IDE is to be an editor for many 
@@ -84,7 +82,7 @@ automata (DFAs) edges should have a ``symbol" attribute of
 type character corresponding to the input by which this 
 edge should be followed. 
 
-\begin{figure}[h]
+\begin{figure}
     \centering
     \includegraphics[width=.8\textwidth]{sinap-screenshot}
     \caption{Sinap IDE editing a graph}
@@ -95,7 +93,7 @@ As you can see in Figure \ref{sinap-screenshot}, Sinap's UI
 presents the user with nodes and edges which can be selected 
 and edited in the sidebar. Allowing the sidebar to change based
 on which interpreter is loaded is the purpose of Sinap's Type System. 
-This document is presents a model for the type system. 
+This document presents a model for the type system. 
     
 Sinap's Type System consists of two parts:
 
@@ -112,7 +110,7 @@ The code for both can be found at
 {github.com/2graphic/sinap-types}.
 
 The data that are allowable in the sidebar can be more complicated than
-simple strings and numbers. In the example above the ``Position" attribute
+simple strings and numbers. Figure \ref{sinap-screenshot}, the ``Position" attribute
 of the node has a structure that similar to the following TypeScript code:
 
 \begin{samepage}
@@ -154,7 +152,7 @@ The data-description language is called Sinap Types. There are
 several kinds of types:
 
 \begin{itemize}
-    \item \(\LitT(\JSLit)\) is the type for literal primitives. That is
+    \item \(\LitT(\JSLit)\) is the type for literal primitives, specifically,
     string, number, and boolean literals. 
     Examples include \(\LitT(17), \LitT(\text{``Hello"}), \text{ and } 
     \LitT(false)\). A value will match this type if and only if it is
@@ -170,8 +168,8 @@ several kinds of types:
     parameter is the type of all the elements of the list. 
     \item \(\SetT(\Type)\) is a type for an unordered collection
     of elements of type \(\Type\).
-    \item \(\MapT(\Type_1, \Type_2)\) is the type of a mapping from 
-    \(\Type_1\) to \(\Type_2\).
+    \item \(\MapT((\Type)_1, (\Type)_2)\) is the type of a mapping from 
+    \((\Type)_1\) to \((\Type)_2\).
     \item \(\ObjT(\String, \String | \NoSuper, ((\String, \Type), ...))\)
     describes an object type. Its name is the first argument, 
     its super-type is the second argument, and the new fields 
@@ -182,7 +180,7 @@ several kinds of types:
     properties of the intersected types. 
     \item \(\UnionT(\Type, ...)\) is a union of several types. 
     Values with this type act as a collection with a single element
-    whose type is one of the \(\{\Type_i\}\). In Sinap, a drop down 
+    whose type is one of the \(\{(\Type)_i\}\). In Sinap, a drop down 
     menu that allows ``Narrow'', ``Wide'', or some number would be 
     typed as \(\UnionT(\LitT(``\text{Narrow}"), \LitT(``\text{Wide}"),
      \NumberT)\).
@@ -236,15 +234,15 @@ With types defined, it is necessary to define a subtype
 relation (\(\bullet\subtype\bullet\)). Subtypes correspond 
 roughly to the idea that if \(A\subtype B\) then \(A\)
 can be used where \(B\) can be used. The subtype relation,
-as formally described in Figure \ref{subtype-definitions}, 
-defines literals as subtypes of there respective general types.
+as formally described in Figures \ref{subtype-definitions} and \ref{subtype-helpers}, 
+defines literals as subtypes of their respective general types.
 For example \(\LitT(\text{``Hello"})\subtype\StringT\). It defines
-record subtypes structurally, that is all the supertype's fields 
-are present in the subtype and the types these fields in the subtype
+record subtypes structurally; that is, all the supertype's fields 
+are present in the subtype and the types of these fields in the subtype
 are subtypes of the corresponding fields in the supertype. 
 Objects are subtyped nominally, meaning that the supertype must be
 found somewhere in the subtype's inheritance chain. Unions are
-are subtypes of other unions as long as all of the types in the 
+subtypes of other unions as long as all of the types in the 
 subtype are subtypes of some type in the supertype. Intersections are 
 subtypes of other intersections if all the supertype's elements are 
 subtypes of all the elements of the suptertype. Additionally, 
@@ -256,22 +254,28 @@ but works well most of the time in practice. \(\Gamma\) is an
 argument to the subtype relation, so it can be threaded through 
 to object types, which use it to lookup supertypes by name. 
 
-\begin{figure}[h]
+\begin{figure}
 \begin{mdframed}        
 \begin{align*}
-    \Type_1&\subtype\Type_1 \\
-    \LitT(\JSLit_1)&\subtype\Type_1 &&\textif \JSTypeof(\JSLit_1) = \Type_1 \\
-    \UnionT(\Type_{1,1}, ...)&\subtype\UnionT(\Type_{2,1}, ...) 
-    &&\textif \forall T\in \{\Type_{1,i}\} \exists T' \in \{\Type_{2,i}\} \suchthat T\subtype T' \\
-    \InterT(\Type_{1,1}, ...)&\subtype\InterT(\Type_{2,1}, ...) 
-    &&\textif \forall T\in \{\Type_{1,i}\} \forall T' \in \{\Type_{2,i}\} T\subtype T' \\
-    \InterT(..., \Type_i, ...)&\subtype\ObjT_1 &&\textif \Type_i\subtype\ObjT_1  \\
+    (\Type)_1&\subtype(\Type)_1 \\
+    \LitT(\JSLit_1)&\subtype(\Type)_1 &&\textif \JSTypeof(\JSLit_1) = (\Type)_1 \\
+    \UnionT((\Type)_{1,1}, ...)&\subtype\UnionT((\Type)_{2,1}, ...) 
+    &&\textif \forall T\in \{(\Type)_{1,i}\} \exists T' \in \{(\Type)_{2,i}\} \suchthat T\subtype T' \\
+    \InterT((\Type)_{1,1}, ...)&\subtype\InterT((\Type)_{2,1}, ...) 
+    &&\textif \forall T\in \{(\Type)_{1,i}\} \forall T' \in \{(\Type)_{2,i}\} T\subtype T' \\
+    \InterT(..., (\Type)_i, ...)&\subtype\ObjT_1 &&\textif (\Type)_i\subtype\ObjT_1  \\
     \ObjT_1 &\subtype \ObjT(\String_1, \_, \_) &&\textif \ObjectSubtype(\String_1, \ObjT_1)\\
     \RecT_1&\subtype\RecT_2 &&\textif \RecordSubtype(\RecT_1, \RecT_2) \\
-    \ListT(\Type_1)&\subtype\ListT(\Type_2) &&\textif \Type_1\subtype\Type_2 \\
-    \SetT(\Type_1)&\subtype\SetT(\Type_2) &&\textif \Type_1\subtype\Type_2 \\
-    \MapT(\Type_{11}, \Type_{12})&\subtype\MapT(\Type_{21}, \Type_{22}) &&\textif \Type_{11}\subtype\Type_{21} \text{ and } \Type_{12}\subtype\Type_{22} \\
+    \ListT((\Type)_1)&\subtype\ListT((\Type)_2) &&\textif (\Type)_1\subtype(\Type)_2 \\
+    \SetT((\Type)_1)&\subtype\SetT((\Type)_2) &&\textif (\Type)_1\subtype(\Type)_2 \\
+    \MapT((\Type)_{11}, (\Type)_{12})&\subtype\MapT((\Type)_{21}, (\Type)_{22}) &&\textif (\Type)_{11}\subtype(\Type)_{21} \text{ and } (\Type)_{12}\subtype(\Type)_{22} \\
 \end{align*}
+\end{mdframed}        
+\caption{Definition of the subtype relation (\(\bullet\subtype\bullet\))}
+\label{subtype-definitions}
+\end{figure}
+\begin{figure}
+\begin{mdframed}        
 \begin{align*}
     \ObjectSubtype(\String_1, \ObjT(\String_2,\_, \_)) \quad &\textif 
     \quad (\String_1 = \String_2)\\
@@ -280,14 +284,14 @@ to object types, which use it to lookup supertypes by name.
 \end{align*}
 \begin{align*}
     \RecordSubtype &\left(\begin{aligned}
-        &\RecT((\String_{1,1}, \Type_{1, 1}), ..., (\String_{1,n}, \Type_{1, n})), \\
-        &\RecT((\String_{2,1}, \Type_{2, 1}), ..., (\String_{2,m}, \Type_{2, m}))
+        &\RecT((\String_{1,1}, (\Type)_{1, 1}), ..., (\String_{1,n}, (\Type)_{1, n})), \\
+        &\RecT((\String_{2,1}, (\Type)_{2, 1}), ..., (\String_{2,m}, (\Type)_{2, m}))
     \end{aligned}\right) \\
-    &\textif \{\String_{2,i}\} \subset \{\String_{1,i}\} \text{ and } \String_{1, i} = \String_{2, j} \implies \Type_{1, i} \subtype \Type_{2, j}
+    &\textif \{\String_{2,i}\} \subset \{\String_{1,i}\} \text{ and } \String_{1, i} = \String_{2, j} \implies (\Type)_{1, i} \subtype (\Type)_{2, j}
 \end{align*}
 \end{mdframed}        
-    \caption{Rules for the subtype relation (\(\bullet\subtype\bullet\))}
-\label{subtype-definitions}
+    \caption{Helper meta-functions for the subtype relation}
+\label{subtype-helpers}
 \end{figure}
 
 While Sinap's Type System is implemented as a library and can have 
@@ -334,6 +338,7 @@ Figures \ref{types-example} and \ref{types-example-code}.
 
 \begin{figure}
 \begin{mdframed}    
+\begin{multicols}{2}
 \begin{verbatim}
 class Node1 {
     label: string;
@@ -357,6 +362,7 @@ class Edge {
 type Nodes = Node1 | Node2;
 type Edges = Edge;
 \end{verbatim}
+\end{multicols}
 \end{mdframed}
 \caption{TypeScript code to go with Figure \ref{types-example}}
 \label{types-example-code}
@@ -369,55 +375,60 @@ interpreter, we need to define a language for describing specific
 graphs. 
 
 Note that Values are parameterized by \(\Sigma\), a ``store" that
-allows Values to reference other values without including their 
+allows Values to reference other Values without including their 
 whole structure. This allows for cycles. 
 
 \textbf{TODO: specifically \(\Sigma\) maps refs to values}
-
+\begin{figure}
+\begin{mdframed}
 \begin{align*}
-    \Value =& \StringV(\Type_1, \String_1) \quad\where \Type_1 \subtype \StringT \\
-    &| \NumberV(\Type_1, \Number_1) \quad\where \Type_1 \subtype \NumberT \\
-    &| \BooleanV(\Type_1, \Boolean_1) \quad\where \Type_1 \subtype \BooleanT \\
-    &| \ObjV(\Type_1, V=((\String_1, \ValueRef_1]), ...)) \quad\where 
-    \ObjPairsMatch(\ObjFields(\Type_1), V) \\
-    &| \UnionV(\UnionT(..., \Type_i, ...), \ValueRef_1) \where
-    \ValueType(\ValueRef_1) \subtype \Type_i\\
-    &| \ListV(\ListT(\Type_1), (\ValueRef_1, ...)) \where \ValueType(\ValueRef_i) \subtype \Type_1 \\
-    &| \SetV(\SetT(\Type_1), \{\ValueRef_1, ...\}) \where \ValueType(\ValueRef_i) \subtype \Type_1 \\
-    &| \MapV(\MapT(\Type_1, \Type_2), ((\ValueRef_{1,1}, \ValueRef_{2,1}), ...)) \where \bigwedge
+    \Value =& \StringV((\Type)_1, \String_1) \quad\where (\Type)_1 \subtype \StringT \\
+    &| \NumberV((\Type)_1, \Number_1) \quad\where (\Type)_1 \subtype \NumberT \\
+    &| \BooleanV((\Type)_1, \Boolean_1) \quad\where (\Type)_1 \subtype \BooleanT \\
+    &| \ObjV((\Type)_1, V=((\String_1, \ValueRef_1]), ...)) \quad\where 
+    \ObjPairsMatch(\ObjFields((\Type)_1), V) \\
+    &| \UnionV(\UnionT(..., (\Type)_i, ...), \ValueRef_1) \where
+    \ValueType(\ValueRef_1) \subtype (\Type)_i\\
+    &| \ListV(\ListT((\Type)_1), (\ValueRef_1, ...)) \where \ValueType(\ValueRef_i) \subtype (\Type)_1 \\
+    &| \SetV(\SetT((\Type)_1), \{\ValueRef_1, ...\}) \where \ValueType(\ValueRef_i) \subtype (\Type)_1 \\
+    &| \MapV(\MapT((\Type)_1, (\Type)_2), ((\ValueRef_{1,1}, \ValueRef_{2,1}), ...)) \where \bigwedge
     \begin{aligned}
-        \ValueType(\ValueRef_{1, i}) \subtype \Type_1 \\
-        \ValueType(\ValueRef_{2, i}) \subtype \Type_2 
+        \ValueType(\ValueRef_{1, i}) \subtype (\Type)_1 \\
+        \ValueType(\ValueRef_{2, i}) \subtype (\Type)_2 
     \end{aligned}\\
 \end{align*}
 
 \begin{align*}
-    \ObjFields(\ObjT(\_, \String_S, (P_1 = (\String_1, \Type_1), ...))) &= \operatorname{concat}(\ObjFields(\LookupObjRef(\String_S), (P_n))) \\
+    \ObjFields(\ObjT(\_, \String_S, (P_1 = (\String_1, (\Type)_1), ...))) &= \operatorname{concat}(\ObjFields(\LookupObjRef(\String_S), (P_n))) \\
     \ObjFields(\InterT(ObjT_1, ...)) &= \operatorname{concat}(\ObjFields(\ObjT_1), ...)
 \end{align*}
 
 \begin{align*}
     \ValueType(\ValueRef_1) &= \ValueType(\ValueDeref{\ValueRef_1}) \\
-    \ValueType(\StringV(\Type_1, \_)) &= \Type_1 \\
-    \ValueType(\NumberV(\Type_1, \_)) &= \Type_1 \\
-    \ValueType(\BooleanV(\Type_1, \_)) &= \Type_1 \\
-    \ValueType(\ObjV(\Type_1, \_)) &= \Type_1 \\
-    \ValueType(\UnionV(\Type_1, \_)) &= \Type_1 \\
-    \ValueType(\ListV(\Type_1, \_)) &= \Type_1 \\
-    \ValueType(\SetV(\Type_1, \_)) &= \Type_1 \\
-    \ValueType(\MapV(\Type_1, \_)) &= \Type_1 \\
+    \ValueType(\StringV((\Type)_1, \_)) &= (\Type)_1 \\
+    \ValueType(\NumberV((\Type)_1, \_)) &= (\Type)_1 \\
+    \ValueType(\BooleanV((\Type)_1, \_)) &= (\Type)_1 \\
+    \ValueType(\ObjV((\Type)_1, \_)) &= (\Type)_1 \\
+    \ValueType(\UnionV((\Type)_1, \_)) &= (\Type)_1 \\
+    \ValueType(\ListV((\Type)_1, \_)) &= (\Type)_1 \\
+    \ValueType(\SetV((\Type)_1, \_)) &= (\Type)_1 \\
+    \ValueType(\MapV((\Type)_1, \_)) &= (\Type)_1 \\
 \end{align*}
 \begin{align*}
-    \ObjPairsMatch(((\String_1, \Type_1),...), ((\String_1, \ValueRef_1), ...)) 
-    \textif \forall i, \ValueType(\Value_i) \subtype \Type_i
+    \ObjPairsMatch(((\String_1, (\Type)_1),...), ((\String_1, \ValueRef_1), ...)) 
+    \textif \forall i, \ValueType(\Value_i) \subtype (\Type)_i
 \end{align*}
+\end{mdframed}
+\caption{Definition of Value}
+\label{value-definition}
+\end{figure}
 
 A valid graph then matches 
 \[(\ListV(\ListT(\textit{Nodes}), \_), \ListV(\ListT(\textit{Edges}), \_))\]
 for some appropriate definition of \textit{Nodes} and \textit{Edges}.
 
 \subsection{Example}
-\begin{figure}[h]
+\begin{figure}
     \centering
     \begin{dot2tex}[dot, scale=0.5]
     digraph {
@@ -428,13 +439,17 @@ for some appropriate definition of \textit{Nodes} and \textit{Edges}.
     \label{simplegraph}
 \end{figure}   
 To give an example, the simple graph given in Figure \ref{simplegraph} 
-might be modeled as:
+might be modeled as is shown in Figure \ref{values-example1}.
+The values loaded into \(\Sigma\) in Figure \ref{values-example1} can probably 
+better be understood Figure \ref{values-example2}.
 
 \newcommand{\treeDraw}[2]{#1 \left(\begin{aligned} &#2\end{aligned}\right)}
 \newcommand{\treeNext}{,\\&}
 \newcommand{\valRef}[1]{\ValueRef_\textit{#1}}
 \newcommand{\textq}[1]{\text{``#1"}}
 
+\begin{figure}
+\begin{mdframed}
 \begin{align*}
     \Sigma(\valRef{0O})&=\ObjV(\ObjT_0, ())\\ 
     \Sigma(\valRef{0U})&=\UnionV(\UnionT_0, \valRef{0O})\\
@@ -458,11 +473,12 @@ might be modeled as:
     \textit{Nodes}_1 &= \treeDraw\ListV{\ListT_5, (\valRef{1U}, \valRef{2U})} \\
     \textit{Edges}_1 &= \treeDraw\ListV{\ListT_6, (\valRef{3U})} \\
 \end{align*}
+\end{mdframed}
+\caption{}
+\label{values-example1}
+\end{figure}
 
-
-\(\Sigma\) can probably better be understood Figure \ref{values-example}.
-
-\begin{figure}[h]
+\begin{figure}
     \centering
     \begin{dot2tex}[fdp, scale=0.5]
     digraph {
@@ -489,19 +505,31 @@ might be modeled as:
     }
     \end{dot2tex}
 \caption{A diagram of the example Values}
-\label{values-example}
+\label{values-example2}
 \end{figure}
 
 \section{Conclusion}
+
 Sinap types is useful for generically describing data-structures 
-so that GUIs for their entry can be automatically generated. 
+so that GUIs for their entry can be automatically generated. We implemented the 
+above as a TypeScript library that gives runtime access to the types 
+of all values used. We implemented loaders to build the type information 
+for this library from TypeScript source code and to build it dynamically from 
+Python. This allows Sinap Plugins to be built in Python or TypeScript. 
+The TypeScript implementation is especially powerful because essentially 
+no thought needs to be given to Sinap IDE while writing an interpreter. 
 
-\textbf{TODO: what do I even say here?}
+When using the Sinap Type-System for to create the IDE we added 
+some invariants to specialize the Type System to graphs. 
+\begin{enumerate}
+    \item There must be types Nodes and Edges which are unions of \(\ObjT\) subtypes. 
+    \item If any Edge type specifies ``source'' or ``destination'', it must be a Node subtype
+    and its type will be respected and added as a constraint when creating graphs.
+    \item The same goes for Nodes, except that the names are ``children'' and 
+    ``parents'' and the types have to be lists of edges.
+\end{enumerate}
 
-\textbf{TODO:Things that are not covered}
+This allows programmers writing interpreters to access connectivity information, 
+a critical element of creating a graph interpreter. 
 
-\textbf{TODO:Discuss the python implementation}
-\textbf{TODO:Typescript}
-
-\textbf{TODO:Source/Destination, how is the model actually used?}
 \end{document}
