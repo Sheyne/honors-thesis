@@ -63,6 +63,9 @@
 \title{Sinap's Type System}
 \author{Sheyne Anderson}
 \maketitle
+
+\tableofcontents
+
 \section{Intro}
 Sinap IDE is a program to allow editing of graph
 programs in various graph programming langauages. Each of these 
@@ -375,10 +378,10 @@ interpreter, we need to define a language for describing specific
 graphs. 
 
 Note that Values are parameterized by \(\Sigma\), a ``store" that
-allows Values to reference other Values without including their 
-whole structure. This allows for cycles. 
+maps \(\ValueRef\)s to \(\Value\)s. 
 
-\textbf{TODO: specifically \(\Sigma\) maps refs to values}
+Each kind of Value has a type and a body which holds the value that 
+goes with the type. 
 \begin{figure}
 \begin{mdframed}
 \begin{align*}
