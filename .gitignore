@@ -10,3 +10,5 @@
 *-dot2tex*
 *.bbl
 *.blg
+*.dvi
+*.tdo

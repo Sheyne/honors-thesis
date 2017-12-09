@@ -11,6 +11,7 @@
     \usepackage{pdfpages}
     \usepackage[parfill]{parskip}
     \usepackage{amsopn}
+    \usepackage{todonotes}
     \usepackage{mathtools}
     \usepackage[utf8]{inputenc}
     \usepackage{multicol}
@@ -40,7 +41,7 @@
     \DeclareMathOperator{\NumberT}{NumberT}
     \DeclareMathOperator{\BooleanT}{BooleanT}
     \DeclareMathOperator{\LitT}{LitT}
-    \DeclareMathOperator{\JSLit}{JSLit}
+    \DeclareMathOperator{\JSLit}{\textit{JSLit}}
     \DeclareMathOperator{\JSTypeof}{JSTypeof}
     \DeclareMathOperator{\RecT}{RecT_\Gamma}
     \DeclareMathOperator{\ObjT}{ObjT_\Gamma}
@@ -51,17 +52,17 @@
     \DeclareMathOperator{\UnionT}{UnionT_\Gamma}
     \DeclareMathOperator{\InterT}{InterT_\Gamma}
     \DeclareMathOperator{\LookupObjRef}{\Gamma}
-    \DeclareMathOperator{\String}{String}
+    \DeclareMathOperator{\Identifier}{\textit{Identifier}}
     \DeclareMathOperator{\Number}{Number}
     \DeclareMathOperator{\Boolean}{Boolean}
     \DeclareMathOperator{\type-ref}{ref}
-    \DeclareMathOperator{\Type}{{Type_\Gamma}}
+    \DeclareMathOperator{\Type}{{\textit{Type}_\Gamma}}
     \DeclareMathOperator{\NoSuper}{NoSuper}
     \DeclareMathOperator{\InterOrObj}{InterOrObj}
     \DeclareMathOperator{\ObjectSubtype}{ObjectSubtype_\Gamma}
     \DeclareMathOperator{\RecordSubtype}{RecordSubtype}
     \DeclareMathOperator{\Value}{Value_{\Gamma, \Sigma}}
-    \DeclareMathOperator{\StringV}{StringV}
+    \DeclareMathOperator{\IdentifierV}{StringV}
     \DeclareMathOperator{\NumberV}{NumberV}
     \DeclareMathOperator{\BooleanV}{BooleanV}
     \DeclareMathOperator{\RecV}{RecV_{\Gamma, \Sigma}}
@@ -90,6 +91,8 @@
 \title{Sinap's Type System}
 \author{Sheyne Anderson}
 \renewcommand{\thepage}{\roman{page}}
+\let\oldtodo\todo
+\renewcommand{\todo}[1]{\oldtodo[inline]{#1}}
 
 \includepdf[fitpaper=true, pages=1]{honorsstuff.pdf}
 
@@ -105,6 +108,8 @@ for that data. These two languages are analogous to XML and XML Schema
 \newpage
 
 \tableofcontents
+\todo{remove the todolist}
+\listoftodos
 \newpage
 \setcounter{page}{1}
 \renewcommand{\headrulewidth}{0pt}
@@ -112,6 +117,7 @@ for that data. These two languages are analogous to XML and XML Schema
 \fancyhead[R]{\thepage}
 \renewcommand{\thepage}{\arabic{page}}
 \section{INTRODUCTION}
+
 
 Graphs are ubiquitous in computer science. They are used
 in various data structures to store information, in compiler 
@@ -137,9 +143,12 @@ programming languages such as LabVIEW \cite{Johnson:1997:LGP:541144}.
 
 \subsection{Sinap IDE}
 
-\textbf{TODO: Our description of Sinap on our website is fairly good, can 
+\todo{Our description of Sinap on our website is fairly good, can 
 I just quote it in its entirety?}
 From \href{https://2graphic.github.io}{2graphic.github.io}:
+
+\todo{just paraphrase the following}
+
 \begin{quotation}
     The goal of Sinap is to provide a generic UI platform 
     for editing and interpreting domain-specific graph-based languages. What does 
@@ -170,7 +179,7 @@ for the stock plugins, setting up automatic testing, continuous
 intergration, and builds, and generally quashing bugs throughout
 the application, my main focus was on the Type System. 
 
-\textbf{TODO: flow/edit the following}
+\todo{flow/edit the following}
 
 Sinap IDE is an integrated development environment for various 
 graph programing languages. Each of these 
@@ -245,6 +254,29 @@ that it receives. The Type System also allows different kinds of nodes and
 edges to exist in the same graph and allows for rules defining what kinds of
 nodes can connect to which edges. 
 
+\todo{``The model is going to be next''}
+
+
+\section{BACKGROUND}
+
+For many programming languages the only specification for 
+semantics if the reference implementation of the interpreter or compiler. 
+Python for example specifies valid behavior based on the behavior of the
+CPython interpreter \cite{cpython}. Other languages, such as 
+C and C++ have an enormous formal document specifying the semantics
+of the language. 
+
+For studying a language academically, it is useful to create a model
+of a language \cite{redexbook}.
+
+\todo{CONTINUE HERE}
+
+
+Featherweight Java
+Lua
+Standard ML
+
+
 \section{TYPES}
 
 \subsection{Notation}
@@ -259,21 +291,72 @@ the set of the elements of the list.
 ``\(\_\)'' represents a symbol that has been omitted for brevity.
 
 \subsection{Type Model}
-The data-description language is called Sinap Types. There are 
-several kinds of types:
+\begin{figure}
+    % \capstart
+    \begin{mdframed}    
+    \begin{multicols}{2}
+    
+    \begin{verbatim}
+    class Node1 {
+        label: string;
+        customAttribute: number;
+    }
+    class Node2 {
+        label: string;
+        otherAttribute: {
+            f1: boolean,
+            f2: number
+        };
+    }
+    class Edge {
+        label: string
+        source: Node1;
+        destination: Node2;
+    }
+    type Nodes = Node1 | Node2;
+    type Edges = Edge;
 
+    
+    
+    \end{verbatim}
+    \end{multicols}
+    \end{mdframed}
+    \caption{TypeScript code to go with Figure \ref{types-example}}
+    \label{types-example-code}
+\end{figure}    
+
+The type system is designed to describe families of valid graphs. 
+This is why it ends up looking like the type system of a programming 
+language: both solve the problem of describing how data is structured.
+An example to motivate Sinap's Type System is given in Figure 
+\ref{types-example-code}. Here I show the description of a graph-language
+given in TypeScript. There are two types of nodes because 
+in general graph languages can have different kinds of nodes in them. 
+For example, in a language describing artificial neural networks, 
+there might be a convolutional layers, fully connected layers, and 
+dropout layers as node types. Sinap Types also supports having multiple
+kinds of edges. 
+
+The model for types is composed of two parts. The first is the 
+specific representation of types given in Figure 
+\ref{sinap-types-model}. The second part defines a subtype
+relations on these types and is given in Figure \ref{subtype-definitions}.
+
+Before diving into Figure \ref{sinap-types-model} and 
+a formal representation of each of the types, here is a presentation 
+of the various types with descriptions in english. 
 \begin{itemize}
+    \item \(\StringT\) is a type representing all strings.
+    \item \(\NumberT\) is a type representing all numbers.
+    \item \(\BooleanT\) is a type representing all booleans.
     \item \(\LitT(\JSLit)\) is the type for literal primitives, specifically,
     string, number, and boolean literals. 
     Examples include \(\LitT(17), \LitT(\text{``Hello"}), \text{ and } 
-    \LitT(false)\). A value will match this type if and only if it is
-    exactly the value of the literal in the type. 
-    \item \(\StringT\) is a type matching all strings.
-    \item \(\NumberT\) is a type matching all numbers.
-    \item \(\BooleanT\) is a type matching all booleans.
-    \item \(\RecT((\String, \Type)...)\) is a type for records. 
+    \LitT(\operatorname{false})\). This type represents only its specific literal. 
+    Note that \(\LitT(17)\) is a subtype of \(\NumberT\).
+    \item \(\RecT((\Identifier, \Type)...)\) is a type for records. 
     The arguments come in pairs where
-    \(\String\) is the name of some field and \(\Type\) is the
+    \(\Identifier\) is the name of some field and \(\Type\) is the
     type of that field.
     \item \(\ListT(\Type)\) is a type for homogeneous lists. The
     parameter is the type of all the elements of the list. 
@@ -281,7 +364,7 @@ several kinds of types:
     of elements of type \(\Type\).
     \item \(\MapT((\Type)_1, (\Type)_2)\) is the type of a mapping from 
     \((\Type)_1\) to \((\Type)_2\).
-    \item \(\ObjT(\String, \String | \NoSuper, ((\String, \Type), ...))\)
+    \item \(\ObjT(\Identifier, \Identifier | \NoSuper, ((\Identifier, \Type), ...))\)
     describes an object type. Its name is the first argument, 
     its super-type is the second argument, and the new fields 
     it introduces is the tuple of (key, value) pairs that form the
@@ -303,22 +386,32 @@ lookup supertypes by name. These informal
 descriptions of the various types are recognized formally 
 in Figure \ref{sinap-types-model}.
 
+To come back to the example in Figure \ref{types-example-code}, 
+one would write 
+\[
+    \operatorname{Node1} = \ObjT(``\text{Node1}", \NoSuper, (
+        (``\text{label}", \StringT),
+        (``\text{customAttribute}", \NumberT)
+        ))
+\]
+to define Node1.
+
 \linespread{1}
 \begin{figure}
 % \capstart
 \begin{mdframed}
 \begin{align*}
-\Type = &\LitT(\JSLit)   &\JSLit = &\operatorname{JSString} \\
-&|\StringT                      &&| \operatorname{JSNumber} \\
-&|\NumberT                      &&| \operatorname{true} \\
-&|\BooleanT                     &&| \operatorname{false} \\
-&|\RecT((\String, \Type), ...) & \JSTypeof(\operatorname{JSString}) &= \StringT \\
+\Type = &\StringT   &\JSLit = &\operatorname{JSString} \\
+&|\NumberT                 &&| \operatorname{JSNumber} \\
+&|\BooleanT                &&| \operatorname{true} \\
+&|\LitT(\JSLit)            &&| \operatorname{false} \\
+&|\RecT((\Identifier, \Type), ...) & \JSTypeof(\operatorname{JSString}) &= \StringT \\
 &|\ListT(\Type) & \JSTypeof(\operatorname{JSNumber}) &= \NumberT \\
 &|\SetT(\Type) & \JSTypeof(\operatorname{true}) &= \BooleanT \\
-&|\MapT(\Type, \Type) & \JSTypeof(\operatorname{false}) &= \BooleanT \\
+&|\MapT((\Type)_1, (\Type)_2) & \JSTypeof(\operatorname{false}) &= \BooleanT \\
 &|\ObjT\left(\begin{aligned}
-    &\String, \String | \NoSuper, \\
-&((\String, \Type), ...)
+    &\Identifier_A, \Identifier_B | \NoSuper, \\
+&((\Identifier_1, \Type), ...)
 \end{aligned}\right) \\
 &|\InterT(\ObjT, ...) \\
 &|\UnionT(\Type, ...)\\
@@ -397,8 +490,8 @@ of Sinap Types will include a fix for this bug.
     \InterT((\Type)_{1,1}, ...)&\subtype\InterT((\Type)_{2,1}, ...) 
     \stfif \forall T\in \{(\Type)_{1,i}\} \forall T' \in \{(\Type)_{2,i}\} T\subtype T' \\
     \InterT(..., (\Type)_i, ...)&\subtype\ObjT_1 \stfif (\Type)_i\subtype\ObjT_1  \\
-    \ObjT_1 &\subtype \ObjT(\String_1, \_, \_) \stfif \ObjectSubtype(\String_1, \ObjT_1)\\
-    \RecT_1&\subtype\RecT_2 \stfif \RecordSubtype(\RecT_1, \RecT_2) \\
+    (\Type)_1 &\subtype \ObjT(\Identifier_1, \_, \_) \stfif \ObjectSubtype(\Identifier_1, \ObjT_1)\\
+    (\Type)_1&\subtype(\Type)_2 \stfif \RecordSubtype(\RecT_1, \RecT_2) \\
     \ListT((\Type)_1)&\subtype\ListT((\Type)_2) \stfif (\Type)_1\subtype(\Type)_2 \\
     \SetT((\Type)_1)&\subtype\SetT((\Type)_2) \stfif (\Type)_1\subtype(\Type)_2 \\
     \MapT((\Type)_{11}, (\Type)_{12})&\subtype\MapT((\Type)_{21}, (\Type)_{22}) \stfif (\Type)_{11}\subtype(\Type)_{21} \text{ and } (\Type)_{12}\subtype(\Type)_{22} \\
@@ -411,17 +504,17 @@ of Sinap Types will include a fix for this bug.
 % \capstart
 \begin{mdframed}        
 \begin{align*}
-    \ObjectSubtype(\String_1, \ObjT(\String_2,\_, \_)) \quad &\textif 
-    \quad (\String_1 = \String_2)\\
-    \ObjectSubtype(\String_1, \ObjT(\_,\String_2, \_)) \quad &\textif 
-    \quad \ObjectSubtype(\String_1, \LookupObjRef(\String_2)))
+    \ObjectSubtype(\Identifier_1, \ObjT(\Identifier_2,\_, \_)) \quad &\textif 
+    \quad (\Identifier_1 = \Identifier_2)\\
+    \ObjectSubtype(\Identifier_1, \ObjT(\_,\Identifier_2, \_)) \quad &\textif 
+    \quad \ObjectSubtype(\Identifier_1, \LookupObjRef(\Identifier_2)))
 \end{align*}
 \begin{align*}
     \RecordSubtype &\left(\begin{aligned}
-        &\RecT((\String_{1,1}, (\Type)_{1, 1}), ..., (\String_{1,n}, (\Type)_{1, n})), \\
-        &\RecT((\String_{2,1}, (\Type)_{2, 1}), ..., (\String_{2,m}, (\Type)_{2, m}))
+        &\RecT((\Identifier_{1,1}, (\Type)_{1, 1}), ..., (\Identifier_{1,n}, (\Type)_{1, n})), \\
+        &\RecT((\Identifier_{2,1}, (\Type)_{2, 1}), ..., (\Identifier_{2,m}, (\Type)_{2, m}))
     \end{aligned}\right) \\
-    &\textif \{\String_{2,i}\} \subset \{\String_{1,i}\} \text{ and } \String_{1, i} = \String_{2, j} \implies (\Type)_{1, i} \subtype (\Type)_{2, j}
+    &\textif \{\Identifier_{2,i}\} \subset \{\Identifier_{1,i}\} \text{ and } \Identifier_{1, i} = \Identifier_{2, j} \implies (\Type)_{1, i} \subtype (\Type)_{2, j}
 \end{align*}
 \end{mdframed}        
     \caption{Helper meta-functions for the subtype relation}
@@ -471,41 +564,6 @@ Figures \ref{types-example} and \ref{types-example-code}.
 \label{types-example}
 \end{figure}
 
-\begin{figure}
-% \capstart
-\begin{mdframed}    
-\begin{multicols}{2}
-
-\begin{verbatim}
-class Node1 {
-    label: string;
-    customAttribute: number;
-}
-class Node2 {
-    label: string;
-    otherAttribute: {
-        f1: boolean,
-        f2: number
-    };
-}
-class Edge {
-    label: string
-    source: Node1;
-    destination: Node2;
-}
-type Nodes = Node1 | Node2;
-type Edges = Edge;
-
-
-
-
-\end{verbatim}
-\end{multicols}
-\end{mdframed}
-\caption{TypeScript code to go with Figure \ref{types-example}}
-\label{types-example-code}
-\end{figure}
-
 \section{VALUES}
 
 Having presented a description of valid graph structures for some
@@ -530,10 +588,10 @@ better be understood in Figure \ref{values-example2}.
 % \capstart
 \begin{mdframed}
 \begin{align*}
-    \Value =& \StringV((\Type)_1, \String_1) \newlinewhere (\Type)_1 \subtype \StringT \\
+    \Value =& \IdentifierV((\Type)_1, \Identifier_1) \newlinewhere (\Type)_1 \subtype \StringT \\
     &| \NumberV((\Type)_1, \Number_1) \newlinewhere (\Type)_1 \subtype \NumberT \\
     &| \BooleanV((\Type)_1, \Boolean_1) \newlinewhere (\Type)_1 \subtype \BooleanT \\
-    &| \ObjV((\Type)_1, V=((\String_1, \ValueRef_1]), ...)) \newlinewhere
+    &| \ObjV((\Type)_1, V=((\Identifier_1, \ValueRef_1]), ...)) \newlinewhere
     \ObjPairsMatch(\ObjFields((\Type)_1), V) \\
     &| \UnionV(\UnionT(..., (\Type)_i, ...), \ValueRef_1) \newlinewhere
     \ValueType(\ValueRef_1) \subtype (\Type)_i\\
@@ -546,12 +604,12 @@ better be understood in Figure \ref{values-example2}.
     \end{aligned}\\
 \end{align*}
 \begin{align*}
-    \ObjFields&(\ObjT(\_, \String_S, (P_1 = (\String_1, (\Type)_1), ...))) \\&= \operatorname{concat}(\ObjFields(\LookupObjRef(\String_S), (P_n))) \\
+    \ObjFields&(\ObjT(\_, \Identifier_S, (P_1 = (\Identifier_1, (\Type)_1), ...))) \\&= \operatorname{concat}(\ObjFields(\LookupObjRef(\Identifier_S), (P_n))) \\
     \ObjFields&(\InterT(ObjT_1, ...)) \\&= \operatorname{concat}(\ObjFields(\ObjT_1), ...)
 \end{align*}
 \begin{align*}
     \ValueType(\ValueRef_1) &= \ValueType(\ValueDeref{\ValueRef_1}) \\
-    \ValueType(\StringV((\Type)_1, \_)) &= (\Type)_1 \\
+    \ValueType(\IdentifierV((\Type)_1, \_)) &= (\Type)_1 \\
     \ValueType(\NumberV((\Type)_1, \_)) &= (\Type)_1 \\
     \ValueType(\BooleanV((\Type)_1, \_)) &= (\Type)_1 \\
     \ValueType(\ObjV((\Type)_1, \_)) &= (\Type)_1 \\
@@ -561,7 +619,7 @@ better be understood in Figure \ref{values-example2}.
     \ValueType(\MapV((\Type)_1, \_)) &= (\Type)_1 \\
 \end{align*}
 \begin{align*}
-    \ObjPairsMatch&(((\String_1, (\Type)_1),...), ((\String_1, \ValueRef_1), ...)) 
+    \ObjPairsMatch&(((\Identifier_1, (\Type)_1),...), ((\Identifier_1, \ValueRef_1), ...)) 
     \\&\textif \forall i, \ValueType(\Value_i) \subtype (\Type)_i
 \end{align*}
 \end{mdframed}
@@ -592,13 +650,13 @@ better be understood in Figure \ref{values-example2}.
 \begin{align*}
     \Sigma(\valRef{0O})&=\ObjV(\ObjT_0, ())\\ 
     \Sigma(\valRef{0U})&=\UnionV(\UnionT_0, \valRef{0O})\\
-    \Sigma(\valRef{1S})&=\treeDraw\StringV{\StringT_1, \textq{Start Node}}\\
+    \Sigma(\valRef{1S})&=\treeDraw\IdentifierV{\StringT_1, \textq{Start Node}}\\
     \Sigma(\valRef{1O})&=\treeDraw\ObjV{\ObjT_1,\treeDraw{}{
         (\textq{label}, \valRef{1S})\treeNext
         (\textq{destination}, \valRef{3U})
         }}\\
     \Sigma(\valRef{1U})&=\treeDraw\UnionV{\UnionT_1, \valRef{1O}}\\
-    \Sigma(\valRef{2S})&=\treeDraw\StringV{\StringT_2, \textq{End Node}}\\
+    \Sigma(\valRef{2S})&=\treeDraw\IdentifierV{\StringT_2, \textq{End Node}}\\
     \Sigma(\valRef{2O})&=\treeDraw\ObjV{\ObjT_2,\treeDraw{}{
         (\textq{label}, \valRef{2S})\treeNext
         (\textq{destination}, \text{nil})
@@ -672,6 +730,8 @@ The TypeScript implementation is especially powerful it allows programmers
 to create an interpreter for a graph based language and have it work with 
 Sinap IDE with little to no extra effort. 
 
+\todo{include the url for the jflap:challenges}
+% url = {http://www.cs.duke.edu/education/undergrad/assets_research/2014_ian_mcmahon_thesis.pdf},
 \bibliographystyle{apacite}
 \bibliography{bib}{}
 
