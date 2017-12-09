@@ -7,6 +7,7 @@
     right=1in,
     bottom=1in
     }
+    
     \usepackage{apacite}
     \usepackage{pdfpages}
     \usepackage[parfill]{parskip}
@@ -94,7 +95,8 @@
 \let\oldtodo\todo
 \renewcommand{\todo}[1]{\oldtodo[inline]{#1}}
 
-\includepdf[fitpaper=true, pages=1]{honorsstuff.pdf}
+\todo{re-include the cover page}
+% \includepdf[fitpaper=true, pages=1]{honorsstuff.pdf}
 
 \section{ABSTRACT}
 
@@ -205,8 +207,7 @@ for that data. These two languages are analogous to XML and XML Schema
     for the data language
 \end{enumerate}
 
-The code for both can be found at \ref{sinap-types-code}.
-
+The code for both can be found at \cite{sinap-types-code}.
 
 
 The data that are allowable in the sidebar can be more complicated than
@@ -719,6 +720,7 @@ Sinap IDE with little to no extra effort.
 \bibliographystyle{apacite}
 \bibliography{bib}{}
 
-\includepdf[fitpaper=true, pages=5]{honorsstuff.pdf}
+\todo{reinclude the final page}
+% \includepdf[fitpaper=true, pages=5]{honorsstuff.pdf}
 
 \end{document}
