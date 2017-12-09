@@ -1,18 +1,39 @@
-\documentclass{article}
+\documentclass[12pt]{article}
     % General document formatting
-    \usepackage[margin=0.7in]{geometry}
+    \usepackage{geometry}
+    \geometry{
+    left=1.5in,
+    top=1in,
+    right=1in,
+    bottom=1in
+    }
+    \usepackage{apacite}
+    \usepackage{pdfpages}
     \usepackage[parfill]{parskip}
     \usepackage{amsopn}
     \usepackage{mathtools}
     \usepackage[utf8]{inputenc}
-    \usepackage{hyperref}
-    \usepackage[figure]{hypcap}
     \usepackage{multicol}
     \usepackage{amsmath,amssymb,amsfonts,amsthm}
     \usepackage{dot2texi}
     \usepackage{tikz}
     \usepackage{mdframed}
     \usepackage[section]{placeins}
+    \usepackage{mathptmx}
+    \usepackage{sectsty}
+    \usepackage{fancyhdr}
+    % \usepackage{hyperref}
+    % \usepackage[figure]{hypcap}
+
+    \makeatletter
+    \renewcommand{\section}{\@startsection
+    {section}%                   % the name
+    {1}%                         % the level
+    {\z@}%                       % the indent / 0mm
+    {-\baselineskip}%            % the before skip / -3.5ex \@plus -1ex \@minus -.2ex
+    {0.5\baselineskip}%          % the after skip / 2.3ex \@plus .2ex
+    {\centering\large\bfseries\MakeUppercase}} % the style
+            
     \usetikzlibrary{shapes,arrows}
 
     \DeclareMathOperator{\StringT}{StringT}
@@ -59,15 +80,98 @@
     \newcommand{\ValueRef}{\textref}
     \newcommand{\ValueDeref}[1]{\Sigma(#1)}
     \newcommand{\subtype}{<:_\Gamma}
+
+    \newcommand{\href}[2]{\textbf{#2}}
+
+    \setcounter{secnumdepth}{0}
+    \linespread{2}
 \begin{document}
 
 \title{Sinap's Type System}
 \author{Sheyne Anderson}
-\maketitle
+\renewcommand{\thepage}{\roman{page}}
+
+\includepdf[fitpaper=true, pages=1]{honorsstuff.pdf}
+
+\section{ABSTRACT}
+
+For the graph program editor Sinap IDE it was necessary to design 
+a language (Sinap's Type System) to generically describe families of 
+cyclic data structures. The Type System consists pair of languages:
+one for describing data and another for describing valid structures
+for that data. These two languages are analogous to XML and XML Schema
+\cite{Thompson:12:WXS}.
+
+\newpage
 
 \tableofcontents
+\newpage
+\setcounter{page}{1}
+\renewcommand{\headrulewidth}{0pt}
+\pagestyle{fancy}
+\fancyhead[R]{\thepage}
+\renewcommand{\thepage}{\arabic{page}}
+\section{INTRODUCTION}
 
-\section{Intro}
+Graphs are ubiquitous in computer science. They are used
+in various data structures to store information, in compiler 
+design to describe the structure of programs, and anywhere 
+in which one might need to reason about the connections 
+in a complicated system. In computation theory, graphs are 
+used to describe the various models of computation such as
+Deterministic Finite-State Automata (DFAs), Push Down
+Automata (PDAs), and Turing Machines. 
+
+When studying these formalisms, it is helpful 
+to have an editor to create instances of these various models
+and execute them on various inputs. One such editor, 
+JFLAP \cite{jflap:book} is used at the University of Utah 
+in CS 3100: Models of Computation. JFLAP has several drawbacks
+including having a unintuitive user interface, 
+being difficult to maintain, and having some bugs 
+\cite{jflap:challenges}. We set out to create an editor 
+for programming languages that could be depicted visually as 
+graphs. These include languages such DFAs, PDAs, and Turing 
+Machines, but also neural network models and some general purpose
+programming languages such as LabVIEW \cite{Johnson:1997:LGP:541144}.
+
+\subsection{Sinap IDE}
+
+\textbf{TODO: Our description of Sinap on our website is fairly good, can 
+I just quote it in its entirety?}
+From \href{https://2graphic.github.io}{2graphic.github.io}:
+\begin{quotation}
+    The goal of Sinap is to provide a generic UI platform 
+    for editing and interpreting domain-specific graph-based languages. What does 
+    this mean? Let's break it down. Users of Sinap want to design visual 
+    representations of state machines or other conceptual tools that can be modeled
+    with nodes and edges but don't want to have to create their own UI to handle all
+    the fancy drawing stuff. Sinap IDE will provide the heavy lifting for presenting
+    the visual side of creating graphs as well as running interpreters for them.
+    Where do these interpreters come from? Plugins. Sinap IDE will expose an API
+    that developers can use to create their own domain-specific interpreters of
+    languages that can be modeled with graphs. These plugins can then be installed
+    into Sinap, giving the IDE more power.
+
+    There are many options for graph editors available, but the vast majority of them
+    are designed specifically for their respective domains. Sinap IDE aims to break 
+    this trend by allowing developers implement their own interpreters that can be 
+    used in the application. Think of a lightweight text editor for writing code but 
+    replace ``text" with ``graph" and add interpreting and that is what Sinap aims to 
+    be. What do we mean by ``interpret"? Sinap is not a tool for simple chart designs. 
+    The idea behind Sinap plugins is to be able to feed graphs some input in order to 
+    see what the graph produces. Imagine a tool that allows you to step through a state 
+    machine that you designed for a project. With Sinap this is possible.
+\end{quotation}
+
+While I was involved with the project as a whole, architecting 
+data-flow throughout the application, building the interpreters
+for the stock plugins, setting up automatic testing, continuous 
+intergration, and builds, and generally quashing bugs throughout
+the application, my main focus was on the Type System. 
+
+\textbf{TODO: flow/edit the following}
+
 Sinap IDE is an integrated development environment for various 
 graph programing languages. Each of these 
 languages is loaded into Sinap as a ``plugin" and is 
@@ -88,7 +192,7 @@ type \texttt{character} corresponding to the input by which this
 edge should be followed. 
 
 \begin{figure}
-    \capstart
+    % \capstart
     \centering
     \includegraphics[width=.8\textwidth]{sinap-screenshot}
     \caption{Sinap IDE editing a graph}
@@ -119,14 +223,15 @@ The data that are allowable in the sidebar can be more complicated than
 simple strings and numbers. In Figure \ref{sinap-screenshot}, the ``Position" attribute
 of the node has a structure similar to the following TypeScript code:
 
-\begin{samepage}
+\vspace{1ex}
+
+\linespread{1}
 \begin{verbatim}
 type Point = {
     x: number;
     y: number;
 }
 \end{verbatim}
-\end{samepage}
 
 Complex types aren't limited to fields directly on nodes and edges,
 and can be arbitrarily nested. 
@@ -140,7 +245,7 @@ that it receives. The Type System also allows different kinds of nodes and
 edges to exist in the same graph and allows for rules defining what kinds of
 nodes can connect to which edges. 
 
-\section{Types}
+\section{TYPES}
 
 \subsection{Notation}
 
@@ -198,18 +303,19 @@ lookup supertypes by name. These informal
 descriptions of the various types are recognized formally 
 in Figure \ref{sinap-types-model}.
 
+\linespread{1}
 \begin{figure}
-\capstart
+% \capstart
 \begin{mdframed}
 \begin{align*}
 \Type = &\LitT(\JSLit)   &\JSLit = &\operatorname{JSString} \\
 &|\StringT                      &&| \operatorname{JSNumber} \\
 &|\NumberT                      &&| \operatorname{true} \\
 &|\BooleanT                     &&| \operatorname{false} \\
-&|\RecT((\String, \Type), ...) \\
-&|\ListT(\Type) \\
-&|\SetT(\Type) \\
-&|\MapT(\Type, \Type) \\
+&|\RecT((\String, \Type), ...) & \JSTypeof(\operatorname{JSString}) &= \StringT \\
+&|\ListT(\Type) & \JSTypeof(\operatorname{JSNumber}) &= \NumberT \\
+&|\SetT(\Type) & \JSTypeof(\operatorname{true}) &= \BooleanT \\
+&|\MapT(\Type, \Type) & \JSTypeof(\operatorname{false}) &= \BooleanT \\
 &|\ObjT\left(\begin{aligned}
     &\String, \String | \NoSuper, \\
 &((\String, \Type), ...)
@@ -241,35 +347,68 @@ subtype are subtypes of some type in the supertype. Intersections are
 subtypes of other intersections if all the supertype's elements are 
 subtypes of all the elements of the suptertype. Additionally, 
 intersections are subtypes of objects that they contain. Lists, 
-Sets, and Maps are subtypes if their arguments are subtypes. This
-contravariant approach to collection subtyping is widespread and 
-used in languages such as Java. While it's technically not sound
-when paired with mutation, it works well in practice. For 
-the Sinap IDE use-case it doesn't come up. 
+Sets, and Maps are subtypes if their arguments are subtypes. 
+
+This definition of subtypes for Lists, Maps, and Sets is unsound
+as illustrated by the following pseudo-TypeScript code 
+(TypeScript uses a different subtype relation).
+
+\begin{verbatim}
+List<Animal> animals = [new Cat()];
+List<Dogs> doggies = animals; // legal, Dog <: Animal
+// invalid, doggies[0] instanceof Cat
+\end{verbatim}
+
+The problem is that a group of animals isn't necessarily a 
+group of dogs. It is valid if we're looking at \texttt{dogs}
+as a list that we only add to and never read. Java has a similar
+issue but in the opposite direction: 
+
+\begin{verbatim}
+    List<Dogs> doggies = [];
+    // in Java List[A] <: List[B] if B<:A
+    List<Animal> animals = doggies; 
+    animals.add(new Cat()); // Legal, Cat <: Animal
+    // invalid, doggies[0] instanceof Cat
+\end{verbatim}
+
+this is more useful because it is valid as long as the 
+lists are only read. Java made this design decision 
+because often lists are only read programmers often want
+this behavior. When I created the model for Sinap Types,
+I noticed this defect with the logic, thereby validating 
+the effort spent creating the model. 
+
+Fortunately, in practice, Sinap isn't creating multiple 
+references to the same collection with different types,
+so this defect doesn't effect Sinap IDE. A later release 
+of Sinap Types will include a fix for this bug. 
+
+\newcommand{\stfif}{\\&\textif}
 
 \begin{figure}
-\capstart
+% \capstart
 \begin{mdframed}        
 \begin{align*}
     (\Type)_1&\subtype(\Type)_1 \\
-    \LitT(\JSLit_1)&\subtype(\Type)_1 &&\textif \JSTypeof(\JSLit_1) = (\Type)_1 \\
+    \LitT(\JSLit_1)&\subtype(\Type)_1 \stfif \JSTypeof(\JSLit_1) = (\Type)_1 \\
     \UnionT((\Type)_{1,1}, ...)&\subtype\UnionT((\Type)_{2,1}, ...) 
-    &&\textif \forall T\in \{(\Type)_{1,i}\} \exists T' \in \{(\Type)_{2,i}\} \suchthat T\subtype T' \\
+    \stfif \forall T\in \{(\Type)_{1,i}\} \exists T' \in \{(\Type)_{2,i}\} \suchthat T\subtype T' \\
     \InterT((\Type)_{1,1}, ...)&\subtype\InterT((\Type)_{2,1}, ...) 
-    &&\textif \forall T\in \{(\Type)_{1,i}\} \forall T' \in \{(\Type)_{2,i}\} T\subtype T' \\
-    \InterT(..., (\Type)_i, ...)&\subtype\ObjT_1 &&\textif (\Type)_i\subtype\ObjT_1  \\
-    \ObjT_1 &\subtype \ObjT(\String_1, \_, \_) &&\textif \ObjectSubtype(\String_1, \ObjT_1)\\
-    \RecT_1&\subtype\RecT_2 &&\textif \RecordSubtype(\RecT_1, \RecT_2) \\
-    \ListT((\Type)_1)&\subtype\ListT((\Type)_2) &&\textif (\Type)_1\subtype(\Type)_2 \\
-    \SetT((\Type)_1)&\subtype\SetT((\Type)_2) &&\textif (\Type)_1\subtype(\Type)_2 \\
-    \MapT((\Type)_{11}, (\Type)_{12})&\subtype\MapT((\Type)_{21}, (\Type)_{22}) &&\textif (\Type)_{11}\subtype(\Type)_{21} \text{ and } (\Type)_{12}\subtype(\Type)_{22} \\
+    \stfif \forall T\in \{(\Type)_{1,i}\} \forall T' \in \{(\Type)_{2,i}\} T\subtype T' \\
+    \InterT(..., (\Type)_i, ...)&\subtype\ObjT_1 \stfif (\Type)_i\subtype\ObjT_1  \\
+    \ObjT_1 &\subtype \ObjT(\String_1, \_, \_) \stfif \ObjectSubtype(\String_1, \ObjT_1)\\
+    \RecT_1&\subtype\RecT_2 \stfif \RecordSubtype(\RecT_1, \RecT_2) \\
+    \ListT((\Type)_1)&\subtype\ListT((\Type)_2) \stfif (\Type)_1\subtype(\Type)_2 \\
+    \SetT((\Type)_1)&\subtype\SetT((\Type)_2) \stfif (\Type)_1\subtype(\Type)_2 \\
+    \MapT((\Type)_{11}, (\Type)_{12})&\subtype\MapT((\Type)_{21}, (\Type)_{22}) \stfif (\Type)_{11}\subtype(\Type)_{21} \text{ and } (\Type)_{12}\subtype(\Type)_{22} \\
 \end{align*}
 \end{mdframed}        
 \caption{Definition of the subtype relation (\(\bullet\subtype\bullet\))}
 \label{subtype-definitions}
 \end{figure}
 \begin{figure}
-\capstart
+% \capstart
 \begin{mdframed}        
 \begin{align*}
     \ObjectSubtype(\String_1, \ObjT(\String_2,\_, \_)) \quad &\textif 
@@ -297,7 +436,7 @@ An example of how TypeScript can be converted into this form is given in
 Figures \ref{types-example} and \ref{types-example-code}. 
 
 \begin{figure}
-\capstart
+% \capstart
 \begin{mdframed}
 \begin{align*}
     \text{Nodes} = &\UnionT\left(
@@ -333,9 +472,10 @@ Figures \ref{types-example} and \ref{types-example-code}.
 \end{figure}
 
 \begin{figure}
-\capstart
+% \capstart
 \begin{mdframed}    
 \begin{multicols}{2}
+
 \begin{verbatim}
 class Node1 {
     label: string;
@@ -366,7 +506,7 @@ type Edges = Edge;
 \label{types-example-code}
 \end{figure}
 
-\section{Values}
+\section{VALUES}
 
 Having presented a description of valid graph structures for some
 interpreter, we need to define a language for describing specific 
@@ -384,31 +524,31 @@ might be modeled as is shown in Figure \ref{values-example1}.
 The values loaded into \(\Sigma\) in Figure \ref{values-example1} can probably 
 better be understood in Figure \ref{values-example2}.
 
+\newcommand{\newlinewhere}{\\&\quad\quad\where}
+
 \begin{figure}[h]
-\capstart
+% \capstart
 \begin{mdframed}
 \begin{align*}
-    \Value =& \StringV((\Type)_1, \String_1) \quad\where (\Type)_1 \subtype \StringT \\
-    &| \NumberV((\Type)_1, \Number_1) \quad\where (\Type)_1 \subtype \NumberT \\
-    &| \BooleanV((\Type)_1, \Boolean_1) \quad\where (\Type)_1 \subtype \BooleanT \\
-    &| \ObjV((\Type)_1, V=((\String_1, \ValueRef_1]), ...)) \quad\where 
+    \Value =& \StringV((\Type)_1, \String_1) \newlinewhere (\Type)_1 \subtype \StringT \\
+    &| \NumberV((\Type)_1, \Number_1) \newlinewhere (\Type)_1 \subtype \NumberT \\
+    &| \BooleanV((\Type)_1, \Boolean_1) \newlinewhere (\Type)_1 \subtype \BooleanT \\
+    &| \ObjV((\Type)_1, V=((\String_1, \ValueRef_1]), ...)) \newlinewhere
     \ObjPairsMatch(\ObjFields((\Type)_1), V) \\
-    &| \UnionV(\UnionT(..., (\Type)_i, ...), \ValueRef_1) \where
+    &| \UnionV(\UnionT(..., (\Type)_i, ...), \ValueRef_1) \newlinewhere
     \ValueType(\ValueRef_1) \subtype (\Type)_i\\
-    &| \ListV(\ListT((\Type)_1), (\ValueRef_1, ...)) \where \ValueType(\ValueRef_i) \subtype (\Type)_1 \\
-    &| \SetV(\SetT((\Type)_1), \{\ValueRef_1, ...\}) \where \ValueType(\ValueRef_i) \subtype (\Type)_1 \\
-    &| \MapV(\MapT((\Type)_1, (\Type)_2), ((\ValueRef_{1,1}, \ValueRef_{2,1}), ...)) \where \bigwedge
+    &| \ListV(\ListT((\Type)_1), (\ValueRef_1, ...)) \newlinewhere \ValueType(\ValueRef_i) \subtype (\Type)_1 \\
+    &| \SetV(\SetT((\Type)_1), \{\ValueRef_1, ...\}) \newlinewhere \ValueType(\ValueRef_i) \subtype (\Type)_1 \\
+    &| \MapV(\MapT((\Type)_1, (\Type)_2), ((\ValueRef_{1,1}, \ValueRef_{2,1}), ...)) \newlinewhere \bigwedge
     \begin{aligned}
         \ValueType(\ValueRef_{1, i}) \subtype (\Type)_1 \\
         \ValueType(\ValueRef_{2, i}) \subtype (\Type)_2 
     \end{aligned}\\
 \end{align*}
-
 \begin{align*}
-    \ObjFields(\ObjT(\_, \String_S, (P_1 = (\String_1, (\Type)_1), ...))) &= \operatorname{concat}(\ObjFields(\LookupObjRef(\String_S), (P_n))) \\
-    \ObjFields(\InterT(ObjT_1, ...)) &= \operatorname{concat}(\ObjFields(\ObjT_1), ...)
+    \ObjFields&(\ObjT(\_, \String_S, (P_1 = (\String_1, (\Type)_1), ...))) \\&= \operatorname{concat}(\ObjFields(\LookupObjRef(\String_S), (P_n))) \\
+    \ObjFields&(\InterT(ObjT_1, ...)) \\&= \operatorname{concat}(\ObjFields(\ObjT_1), ...)
 \end{align*}
-
 \begin{align*}
     \ValueType(\ValueRef_1) &= \ValueType(\ValueDeref{\ValueRef_1}) \\
     \ValueType(\StringV((\Type)_1, \_)) &= (\Type)_1 \\
@@ -421,8 +561,8 @@ better be understood in Figure \ref{values-example2}.
     \ValueType(\MapV((\Type)_1, \_)) &= (\Type)_1 \\
 \end{align*}
 \begin{align*}
-    \ObjPairsMatch(((\String_1, (\Type)_1),...), ((\String_1, \ValueRef_1), ...)) 
-    \textif \forall i, \ValueType(\Value_i) \subtype (\Type)_i
+    \ObjPairsMatch&(((\String_1, (\Type)_1),...), ((\String_1, \ValueRef_1), ...)) 
+    \\&\textif \forall i, \ValueType(\Value_i) \subtype (\Type)_i
 \end{align*}
 \end{mdframed}
 \caption{Definition of Value}
@@ -430,7 +570,7 @@ better be understood in Figure \ref{values-example2}.
 \end{figure}
 
 \begin{figure}
-    \capstart
+    % \capstart
     \centering
     \begin{dot2tex}[dot, scale=0.5]
     digraph {
@@ -447,7 +587,7 @@ better be understood in Figure \ref{values-example2}.
 \newcommand{\textq}[1]{\text{``#1"}}
 
 \begin{figure}
-\capstart
+% \capstart
 \begin{mdframed}
 \begin{align*}
     \Sigma(\valRef{0O})&=\ObjV(\ObjT_0, ())\\ 
@@ -478,7 +618,7 @@ better be understood in Figure \ref{values-example2}.
 \end{figure}
 
 \begin{figure}
-    \capstart
+    % \capstart
     \centering
     \begin{dot2tex}[dot, scale=0.5]
     digraph {
@@ -507,7 +647,7 @@ better be understood in Figure \ref{values-example2}.
 \label{values-example2}
 \end{figure}
 
-\section{Applications in Sinap IDE}
+\section{APPLICATIONS IN SINAP IDE}
 
 When using the Sinap Type-System to create the IDE we added 
 some invariants to specialize the Type System to graphs. 
@@ -531,5 +671,10 @@ Python. This allows Sinap Plugins to be built in Python or TypeScript.
 The TypeScript implementation is especially powerful it allows programmers 
 to create an interpreter for a graph based language and have it work with 
 Sinap IDE with little to no extra effort. 
+
+\bibliographystyle{apacite}
+\bibliography{bib}{}
+
+\includepdf[fitpaper=true, pages=5]{honorsstuff.pdf}
 
 \end{document}

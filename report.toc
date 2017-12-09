@@ -1,7 +1,10 @@
-\contentsline {section}{\numberline {1}Intro}{1}{section.1}
-\contentsline {section}{\numberline {2}Types}{2}{section.2}
-\contentsline {subsection}{\numberline {2.1}Notation}{2}{subsection.2.1}
-\contentsline {subsection}{\numberline {2.2}Type Model}{2}{subsection.2.2}
-\contentsline {subsection}{\numberline {2.3}Subtype Relations}{3}{subsection.2.3}
-\contentsline {section}{\numberline {3}Values}{5}{section.3}
-\contentsline {section}{\numberline {4}Applications in Sinap IDE}{7}{section.4}
+\contentsline {section}{ABSTRACT}{ii}
+\contentsline {section}{INTRODUCTION}{1}
+\contentsline {subsection}{Sinap IDE}{1}
+\contentsline {section}{TYPES}{5}
+\contentsline {subsection}{Notation}{5}
+\contentsline {subsection}{Type Model}{5}
+\contentsline {subsection}{Subtype Relations}{6}
+\contentsline {section}{VALUES}{11}
+\contentsline {section}{APPLICATIONS IN SINAP IDE}{14}
+\contentsline {section}{References}{15}

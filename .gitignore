@@ -8,3 +8,5 @@
 *.out
 .vscode/*
 *-dot2tex*
+*.bbl
+*.blg
