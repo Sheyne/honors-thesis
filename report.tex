@@ -98,12 +98,14 @@
 
 \section{ABSTRACT}
 
+\todo{polish the abstract. To Matt: suggestions?}
+
 For the graph program editor Sinap IDE it was necessary to design 
 a language (Sinap's Type System) to generically describe families of 
-cyclic data structures. The Type System consists pair of languages:
-one for describing data and another for describing valid structures
-for that data. These two languages are analogous to XML and XML Schema
-\cite{Thompson:12:WXS}.
+cyclic data structures. This language can be used to keep track of 
+run-time information about values that would not otherwise be present.
+This is used in Sinap IDE to specialize the user interface.
+This thesis presents a model for Sinap's Type System. 
 
 \newpage
 
@@ -144,54 +146,29 @@ programming languages such as LabVIEW \cite{Johnson:1997:LGP:541144}.
 
 \subsection{Sinap IDE}
 
-\todo{Our description of Sinap on our website is fairly good, can 
-I just quote it in its entirety?}
-From \href{https://2graphic.github.io}{2graphic.github.io}:
+Sinap IDE is a ``generic UI platform 
+for editing and interpreting domain-specific graph-based languages''
+\cite{sinap-ide}. It is a tool that lets a user edit and run graphs
+(using ``graph'' here to mean a system of nodes connected edges) with
+different sets of rules for how the graphs should be interpreted as a
+program. These different rules are referred to as ``graph-based languages"
+and the programs that run them are referred to interchangeably as 
+``plugins" and ``interpreters". Sinap with adapt its user interface to 
+suit the plugin that is associated with the active graph. 
 
-\todo{just paraphrase the following}
-
-\begin{quotation}
-    The goal of Sinap is to provide a generic UI platform 
-    for editing and interpreting domain-specific graph-based languages. What does 
-    this mean? Let's break it down. Users of Sinap want to design visual 
-    representations of state machines or other conceptual tools that can be modeled
-    with nodes and edges but don't want to have to create their own UI to handle all
-    the fancy drawing stuff. Sinap IDE will provide the heavy lifting for presenting
-    the visual side of creating graphs as well as running interpreters for them.
-    Where do these interpreters come from? Plugins. Sinap IDE will expose an API
-    that developers can use to create their own domain-specific interpreters of
-    languages that can be modeled with graphs. These plugins can then be installed
-    into Sinap, giving the IDE more power.
-
-    There are many options for graph editors available, but the vast majority of them
-    are designed specifically for their respective domains. Sinap IDE aims to break 
-    this trend by allowing developers implement their own interpreters that can be 
-    used in the application. Think of a lightweight text editor for writing code but 
-    replace ``text" with ``graph" and add interpreting and that is what Sinap aims to 
-    be. What do we mean by ``interpret"? Sinap is not a tool for simple chart designs. 
-    The idea behind Sinap plugins is to be able to feed graphs some input in order to 
-    see what the graph produces. Imagine a tool that allows you to step through a state 
-    machine that you designed for a project. With Sinap this is possible.
-\end{quotation}
+The main objectives of Sinap are twofold. First, we believe that one
+of the major blockers for the adoption of graph-based languages is 
+lack of adequate tooling: when creating new programming language,
+one does not have to first make a text editor. Sinap IDE will 
+offers a flexible editor that will work with any graph. Second, 
+the tools for manipulating automata as used throughout computation 
+theory are inadequate. 
 
 While I was involved with the project as a whole, architecting 
 data-flow throughout the application, building the interpreters
 for the stock plugins, setting up automatic testing, continuous 
 intergration, and builds, and generally quashing bugs throughout
 the application, my main focus was on the Type System. 
-
-\todo{flow/edit the following}
-
-Sinap IDE is an integrated development environment for various 
-graph programing languages. Each of these 
-languages is loaded into Sinap as a ``plugin" and is 
-referred to as an interpreter (since it runs programs dynamically). 
-More information 
-about the editor can be found at 
-\href{https://2graphic.github.io}{2graphic.github.io}.
-Because our goal for Sinap IDE is to be an editor for many 
-different graph programming languages, we designed the user interface (UI)
-to adapt to best support whichever plugin that is currently loaded. 
 
 While editing a graph, components of the
 graph will have different attributes associated with them 
@@ -205,17 +182,20 @@ edge should be followed.
     % \capstart
     \centering
     \includegraphics[width=.8\textwidth]{sinap-screenshot}
-    \caption{Sinap IDE editing a graph}
+    \caption{Sinap IDE editing a graph.}
     \label{sinap-screenshot}  
 \end{figure}
 
 In Figure \ref{sinap-screenshot}, Sinap's UI
 presents the user with nodes and edges which can be selected 
 and edited in the sidebar. Allowing the sidebar and other UI components to change based
-on which interpreter is loaded is the purpose of Sinap's Type System. 
+on which interpreter is loaded is the high-level purpose of Sinap's Type System. 
 This document presents a model for the type system. 
-    
-Sinap's Type System consists of two parts:
+
+The Type System consists pair of languages:
+one for describing data and another for describing valid structures
+for that data. These two languages are analogous to XML and XML Schema
+\cite{Thompson:12:WXS} respectively.
 
 \begin{enumerate}
     \item A data-language to describe graph components 
@@ -225,9 +205,9 @@ Sinap's Type System consists of two parts:
     for the data language
 \end{enumerate}
 
-The code for both can be found at 
-\href{https://github.com/2graphic/sinap-types}
-{github.com/2graphic/sinap-types}.
+The code for both can be found at \ref{sinap-types-code}.
+
+
 
 The data that are allowable in the sidebar can be more complicated than
 simple strings and numbers. In Figure \ref{sinap-screenshot}, the ``Position" attribute
@@ -289,7 +269,14 @@ where \(n\) is unspecified and represent an ordered list
 of \(n\) elements. \(\{\operatorname{Kind}_i\}\) represents 
 the set of the elements of the list. 
 
-``\(\_\)'' represents a symbol that has been omitted for brevity.
+``\(\_\)'' represents a symbol that has been omitted for brevity. 
+Because much of the model is uses deeply nested parentheses, 
+I will sometimes put put newlines after commas, as follows:
+\begin{align*}
+    (a,b,c) &= \left(\begin{aligned}
+        &a,b,\\&c
+    \end{aligned}\right)
+\end{align*}
 
 \subsection{Type Model}
 \begin{figure}
@@ -322,7 +309,7 @@ the set of the elements of the list.
     \end{verbatim}
     \end{multicols}
     \end{mdframed}
-    \caption{TypeScript code to go with Figure \ref{types-example}}
+    \caption{TypeScript code to go with Figure \ref{types-example}.}
     \label{types-example-code}
 \end{figure}    
 
@@ -418,7 +405,7 @@ to define Node1.
 &|\UnionT(\Type, ...)
 \end{align*}
 \end{mdframed}
-\caption{Formal Description of Sinap Types}
+\caption{Formal Description of Sinap Types.}
 \label{sinap-types-model}
 \end{figure}
 
@@ -448,35 +435,25 @@ as illustrated by the following pseudo-TypeScript code
 (TypeScript uses a different subtype relation).
 
 \begin{verbatim}
-List<Animal> animals = [new Cat()];
-List<Dogs> doggies = animals; // legal, Dog <: Animal
-// invalid, doggies[0] instanceof Cat
+    List<Dogs> dogs = [];
+    // Legal, (Dog <: Animal) => (List<Dog> <: List<Animal>)
+    List<Animal> animals = dogs; 
+    animals.add(new Cat()); 
+    // invalid, dogs[0] instanceof Cat
 \end{verbatim}
 
-The problem is that a group of animals isn't necessarily a 
-group of dogs. It is valid if we're looking at \texttt{dogs}
-as a list that we only add to and never read. Java has a similar
-issue but in the opposite direction: 
-
-\begin{verbatim}
-    List<Dogs> doggies = [];
-    // in Java List[A] <: List[B] if B<:A
-    List<Animal> animals = doggies; 
-    animals.add(new Cat()); // Legal, Cat <: Animal
-    // invalid, doggies[0] instanceof Cat
-\end{verbatim}
-
-this is more useful because it is valid as long as the 
-lists are only read. Java made this design decision 
+This behavior is the same as Java which made this design decision 
 because often lists are only read programmers often want
 this behavior. When I created the model for Sinap Types,
 I noticed this defect with the logic, thereby validating 
 the effort spent creating the model. 
 
-Fortunately, in practice, Sinap isn't creating multiple 
-references to the same collection with different types,
-so this defect doesn't effect Sinap IDE. A later release 
-of Sinap Types will include a fix for this bug. 
+Fortunately, in Sinap IDE, multiple references to 
+the same collection aren't being created,
+so this defect doesn't come up. A later release 
+of Sinap Types will include a fix for this bug in 
+case Sinap Types is used in a case where this assumption isn't
+valid.
 
 \newcommand{\stfif}{\\&\textif}
 
@@ -498,7 +475,7 @@ of Sinap Types will include a fix for this bug.
     \MapT((\Type)_{11}, (\Type)_{12})&\subtype\MapT((\Type)_{21}, (\Type)_{22}) \stfif (\Type)_{11}\subtype(\Type)_{21} \text{ and } (\Type)_{12}\subtype(\Type)_{22} 
 \end{align*}
 \end{mdframed}        
-\caption{Definition of the subtype relation (\(\bullet\subtype\bullet\))}
+\caption{Definition of the subtype relation (\(\bullet\subtype\bullet\)).}
 \label{subtype-definitions}
 \end{figure}
 \begin{figure}
@@ -519,20 +496,20 @@ of Sinap Types will include a fix for this bug.
     \text{and } \Identifier_{1, i} = \Identifier_{2, j} \\&\implies (\Type)_{1, i} \subtype (\Type)_{2, j}
 \end{align*}
 \end{mdframed}        
-    \caption{Helper meta-functions for the subtype relation}
+    \caption{Helper meta-functions for the subtype relation.}
 \label{subtype-helpers}
 \end{figure}
 
 While Sinap's Type System is implemented as a library and can have 
 concrete syntaxes in several languages, our most mature implementation 
-is in TypeScript. 
-
-An example of how TypeScript can be converted into this form is given in 
+is in TypeScript. An example of how TypeScript can be converted to 
+the form used for this model is given in 
 Figures \ref{types-example} and \ref{types-example-code}. 
 
 \begin{figure}
 % \capstart
 \begin{mdframed}
+\small
 \begin{align*}
     \text{Nodes} = &\UnionT\left(
         \begin{aligned}
@@ -544,14 +521,16 @@ Figures \ref{types-example} and \ref{types-example-code}.
                         &(\text{``customAttribute"}, \NumberT)
                     \end{aligned}\right)
             \end{aligned}\right),  \\
-        &\ObjT\left(\text{``Node2"}, \NoSuper, \left(\begin{aligned}
-            (&\text{``label"}, \StringT),  \\
-            (&\text{``otherAttribute"}, \RecT\left(
+        &\ObjT\left(\begin{aligned} &\text{``Node2"}, \NoSuper,\\&\left(\begin{aligned}
+            &(\text{``label"}, \StringT),  \\
+            &\left(\begin{aligned}
+                \text{``otherAttribute"},\RecT\left(
                 \begin{aligned}
                     (&\text{``f1"}, \BooleanT),  \\
                     (&\text{``f2"}, \NumberT)
                 \end{aligned}\right)
-        \end{aligned}\right)\right)
+            \end{aligned}\right)
+        \end{aligned}\right)\end{aligned}\right)
         \end{aligned}\right)  \\
     \text{Edges} = &\UnionT\left(\ObjT\left(
         \text{``Edge"}, \NoSuper,  
@@ -561,8 +540,10 @@ Figures \ref{types-example} and \ref{types-example-code}.
             (&\text{``destination"}, \ObjT(\text{``Node2"}, \_, \_))              
         \end{aligned}\right)\right)\right)
 \end{align*}
+\normalsize
 \end{mdframed}
-\caption{An example of an interpreter's description of valid graphs}
+\caption{An example of an interpreter's description of valid graphs. 
+It is equivalent to Figure \ref{types-example-code}.}
 \label{types-example}
 \end{figure}
 
@@ -625,7 +606,7 @@ better be understood in Figure \ref{values-example2}.
     \\&\textif \forall i, \ValueType(\Value_i) \subtype (\Type)_i
 \end{align*}
 \end{mdframed}
-\caption{Definition of Value}
+\caption{Definition of Value.}
 \label{value-definition}
 \end{figure}
 
@@ -637,7 +618,7 @@ better be understood in Figure \ref{values-example2}.
         "Start Node" -> "End Node";
     }
     \end{dot2tex}
-    \caption{A simple graph}
+    \caption{A simple graph.}
     \label{simplegraph}
 \end{figure}   
 
@@ -673,7 +654,8 @@ better be understood in Figure \ref{values-example2}.
     \textit{Edges}_1 &= \treeDraw\ListV{\ListT_6, (\valRef{3U})} 
 \end{align*}
 \end{mdframed}
-\caption{A representation of Figure \ref{simplegraph} in the Sinap Type System}
+\caption{A representation of Figure \ref{simplegraph} 
+in the Sinap Type System.}
 \label{values-example1}
 \end{figure}
 
@@ -703,7 +685,7 @@ better be understood in Figure \ref{values-example2}.
         "4" -> "2U"
     }
     \end{dot2tex}
-\caption{A diagram of the Values in Figure \ref{values-example1}}
+\caption{A diagram of the Values in Figure \ref{values-example1}.}
 \label{values-example2}
 \end{figure}
 
