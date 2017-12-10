@@ -105,13 +105,13 @@ Sinap IDE is an editor for graph-based programming languages
 (as distinct from text-based).
 To facilitate versatility in Sinap IDE it was necessary to design 
 a language (Sinap's Type System) to generically describe families of 
-cyclic data structures. This language can be used to maintain 
+well-formed cyclic data structures. This language can be used to maintain 
 run-time information about values that would not otherwise be present.
 It is used in Sinap IDE to store attributed graphs representing computer
 programs, allowing Sinap to specialize the user interface to that graph.
 This thesis presents a model for Sinap's Type System. This model 
 is a formal description of the behavior of the Type System library analogous
-to models of programming languages such as Lua, or Standard ML.
+to models of programming languages such as Lua or Standard ML.
 
 \newpage
 
@@ -141,10 +141,10 @@ When studying these formalisms, it is helpful
 to have an editor to create instances of these various models
 and execute them on various inputs. One such editor, 
 JFLAP \cite{jflap:book} is used at the University of Utah 
-in CS 3100: Models of Computation. JFLAP has several drawbacks
+in CS 3100: Models of Computation. JFLAP has several drawbacks,
 including having an unintuitive user interface (UI), 
 being difficult to maintain, and having some bugs 
-\cite{jflap:challenges}. We set out to create an editor 
+\cite{jflap:challenges}. We set out to create a general editor 
 for programming languages that could be depicted visually as 
 graphs. These include languages such as DFAs, PDAs, and Turing 
 Machines, but also neural network models and some general purpose
@@ -159,7 +159,7 @@ for editing and interpreting domain-specific graph-based languages''
 different sets of rules for how the graphs should be interpreted as a
 program. These different rules are referred to as ``graph-based languages"
 and the programs that run them are referred to interchangeably as 
-``plugins" and ``interpreters". Sinap will adapt its user interface to 
+``plugins" and ``interpreters". Sinap adapts its user interface to 
 suit the plugin that is associated with the active graph. 
 
 The main objectives of Sinap are twofold. First, we believe that one
@@ -171,14 +171,14 @@ language, they would first have to make a graph editor. Sinap IDE
 offers a flexible editor that will work with any graph. Second, 
 the tools for manipulating automata as used throughout computation 
 theory are inadequate. As noted above, JFLAP can be buggy and 
-difficult to use and there are not good alternatives to it. 
+difficult to use, and there are not good alternatives to it. 
 
-Sinap IDE involved building a user interface for the graph editor and
+Creating the Sinap IDE involved building a user interface for the graph editor and
 interfaces for the various testing and editing components. 
 It also involved various software design practices, such as
 consistent, automatic builds, continuous integration, 
 unit testing, and issue tracking. The central component of the IDE is 
-the Type System which I implemented and is what the remainder of this
+the Type System, which I implemented and is what the remainder of this
 thesis will focus on.
 
 While editing a graph, components of the
@@ -206,14 +206,14 @@ This document presents a model for the type system.
 The Type System consists of a pair of languages:
 one for describing data and another for describing valid structures
 for that data. These two languages are analogous to XML and XML Schema
-\cite{Thompson:12:WXS} respectively.
+\cite{Thompson:12:WXS}, respectively.
 
 \begin{enumerate}
-    \item A data-language to describe graph components 
-    (implemented in values.ts)
-    \item A data-description language to define valid schema 
-    (implemented in types.ts)
-    for the data language. For additional details see \cite{sinap-types-code}.
+    \item The data-language describes graph components and is
+    implemented in values.ts.
+    \item The data-description language defines valid schema 
+    for the data language and is implemented in types.ts. 
+    For additional details, see \cite{sinap-types-code}.
 \end{enumerate}
 
 The data that are allowable in the sidebar can be more complicated than
@@ -240,10 +240,10 @@ edges to exist in the same graph and allows for rules defining what kinds of
 nodes can connect to which edges. 
 
 In order to better understand the Type System, I have created a 
-formal model of a subset of the language. This allows proofs of
+formal model of a subset of the language. This model supports proof of
 its behavior and simplifies understanding of system. This model 
-is non-trivial because the Type System uses some unique types 
-such as type for literals, covariant collection types, and the
+is non-trivial, because the Type System uses some unique types 
+such as a type for literals, covariant collection types, and the
 ability to intersect class types together. 
 
 \section{BACKGROUND}
