@@ -84,9 +84,11 @@
     \newcommand{\subtype}{<:_\Gamma}
 
     \newcommand{\href}[2]{\textbf{#2}}
-
+    \newcommand{\textq}[1]{\text{``#1"}}
+    
     \setcounter{secnumdepth}{0}
     \linespread{2}
+    \setlength{\parindent}{1cm}
 \begin{document}
 
 \title{Sinap's Type System}
@@ -102,12 +104,17 @@
 
 \todo{polish the abstract. To Matt: suggestions?}
 
-For the graph program editor Sinap IDE it was necessary to design 
+Sinap IDE is an editor for graph-based programming languages
+(as distinct from text-based).
+To facilitate versatility in Sinap IDE it was necessary to design 
 a language (Sinap's Type System) to generically describe families of 
-cyclic data structures. This language can be used to keep track of 
+cyclic data structures. This language can be used to maintain 
 run-time information about values that would not otherwise be present.
-This is used in Sinap IDE to specialize the user interface.
-This thesis presents a model for Sinap's Type System. 
+It is used in Sinap IDE to store attributed graphs representing computer
+programs, allowing Sinap to specialize the user interface to that graph.
+This thesis presents a model for Sinap's Type System. This model 
+is a formal description of the behavior of the Type System library analogous
+to models of programming languages such as Lua, or Standard ML.
 
 \newpage
 
@@ -138,11 +145,11 @@ to have an editor to create instances of these various models
 and execute them on various inputs. One such editor, 
 JFLAP \cite{jflap:book} is used at the University of Utah 
 in CS 3100: Models of Computation. JFLAP has several drawbacks
-including having a unintuitive user interface, 
+including having an unintuitive user interface (UI), 
 being difficult to maintain, and having some bugs 
 \cite{jflap:challenges}. We set out to create an editor 
 for programming languages that could be depicted visually as 
-graphs. These include languages such DFAs, PDAs, and Turing 
+graphs. These include languages such as DFAs, PDAs, and Turing 
 Machines, but also neural network models and some general purpose
 programming languages such as LabVIEW \cite{Johnson:1997:LGP:541144}.
 
@@ -151,26 +158,28 @@ programming languages such as LabVIEW \cite{Johnson:1997:LGP:541144}.
 Sinap IDE is a ``generic UI platform 
 for editing and interpreting domain-specific graph-based languages''
 \cite{sinap-ide}. It is a tool that lets a user edit and run graphs
-(using ``graph'' here to mean a system of nodes connected edges) with
+(using ``graph'' here to mean a system of nodes connected to edges) with
 different sets of rules for how the graphs should be interpreted as a
 program. These different rules are referred to as ``graph-based languages"
 and the programs that run them are referred to interchangeably as 
-``plugins" and ``interpreters". Sinap with adapt its user interface to 
+``plugins" and ``interpreters". Sinap will adapt its user interface to 
 suit the plugin that is associated with the active graph. 
 
 The main objectives of Sinap are twofold. First, we believe that one
 of the major blockers for the adoption of graph-based languages is 
-lack of adequate tooling: when creating new programming language,
-one does not have to first make a text editor. Sinap IDE will 
+a lack of adequate tooling. If I were to invent a new text-based programming
+language, I wouldn't first have to write a text editor. The problem is
+that, until we created Sinap, if I was creating a graph based programming
+language, I would first have to make a graph editor. Sinap IDE 
 offers a flexible editor that will work with any graph. Second, 
 the tools for manipulating automata as used throughout computation 
 theory are inadequate. 
 
-While I was involved with the project as a whole, architecting 
+I was involved with the project as a whole, including architecting 
 data-flow throughout the application, building the interpreters
 for the stock plugins, setting up automatic testing, continuous 
 intergration, and builds, and generally quashing bugs throughout
-the application, my main focus was on the Type System. 
+the application. However, my main focus was on the Type System. 
 
 While editing a graph, components of the
 graph will have different attributes associated with them 
@@ -194,7 +203,7 @@ and edited in the sidebar. Allowing the sidebar and other UI components to chang
 on which interpreter is loaded is the high-level purpose of Sinap's Type System. 
 This document presents a model for the type system. 
 
-The Type System consists pair of languages:
+The Type System consists of a pair of languages:
 one for describing data and another for describing valid structures
 for that data. These two languages are analogous to XML and XML Schema
 \cite{Thompson:12:WXS} respectively.
@@ -204,11 +213,8 @@ for that data. These two languages are analogous to XML and XML Schema
     (implemented in values.ts)
     \item A data-description language to define valid schema 
     (implemented in types.ts)
-    for the data language
+    for the data language. For additional details see \cite{sinap-types-code}.
 \end{enumerate}
-
-The code for both can be found at \cite{sinap-types-code}.
-
 
 The data that are allowable in the sidebar can be more complicated than
 simple strings and numbers. In Figure \ref{sinap-screenshot}, the ``Position" attribute
@@ -223,9 +229,6 @@ type Point = {
     y: number;
 }
 \end{verbatim}
-
-Complex types aren't limited to fields directly on nodes and edges,
-and can be arbitrarily nested. 
 
 The goal of creating Sinap's Type System is to allow plugin/interpreter
 implementers to specify what 
@@ -243,8 +246,8 @@ its behavior and simplifies understanding of system.
 \section{BACKGROUND}
 
 For many programming languages the only specification for 
-semantics if the reference implementation of the interpreter or compiler. 
-Python for example specifies valid behavior based on the behavior of the
+semantics is the reference implementation of the interpreter or compiler. 
+Python, for example, specifies valid behavior based on the behavior of the
 CPython interpreter \cite{cpython}. Other languages, such as 
 C and C++ have an enormous formal document specifying the semantics
 of the language. 
@@ -254,11 +257,10 @@ of a language \cite{redexbook}. Some examples of languages with
 formal models associated with all or much of their behavior are
 Featherweight Java \cite{Igarashi:2001:FJM:503502.503505}, 
 Lua \cite{DBLP:journals/corr/SoldevilaZSFM17}, 
-and Standard ML \cite{Milner:1997:DSM:549659}. This is helpful because
+and Standard ML \cite{Milner:1997:DSM:549659}. The model is helpful because
 it allows formal guarantees about the behavior of well-formed
-programs. It is also useful because a model is often easier to 
+programs. A model is often easier to 
 read and more concise than a full implementation of a language. 
-
 The remainder of this thesis will present a model of Sinap's Type 
 System. 
 
@@ -269,8 +271,8 @@ System.
 Since Sinap's Type System is a library and has no concrete 
 syntax, the model adopts a contrived syntax similar to that
 used in mathematics. The library is implemented in TypeScript
-and the conversion straightforward and is exemplified by 
-the following example.
+and the conversion is straightforward as exemplified by 
+the following.
 
 \begin{tabular}{rcl}
     \verb|new Type.Primitive("string")|&=&\(\StringT\) \\
@@ -281,15 +283,15 @@ the following example.
 
 When discussing finite lists, the symbol 
 \((\Kind_1, ...)\) is equivalent to 
-\((\Kind_i)\). They are also equivalent to 
+\((\Kind_i)\). Both symbols are also equivalent to 
 \((\Kind_1, ..., \Kind_n)\)
-where \(n\) is unspecified and represent an ordered list 
+where \(n\) is unspecified and represents an ordered list 
 of \(n\) elements. \(\{\Kind_i\}\) represents 
 the set of the elements of the list. These are also valid 
 as argument lists to functions. 
 
 ``\(\_\)'' represents a symbol that has been omitted for brevity. 
-Because much of the model is uses deeply nested parentheses, 
+Because much of the model uses deeply nested parentheses, 
 I will sometimes put put newlines after commas, as follows:
 \begin{align*}
     (a,b,c) &= \left(\begin{aligned}
@@ -333,25 +335,26 @@ I will sometimes put put newlines after commas, as follows:
 \end{figure}    
 
 The type system is designed to describe families of valid graphs. 
-This is why it ends up looking like the type system of a programming 
+Because of this, Sinap's Type System closely resembles the type system
+of a standard programming 
 language: both solve the problem of describing how data is structured.
 An example to motivate Sinap's Type System is given in Figure 
-\ref{types-example-code}. Here I show the description of a graph-language
-given in TypeScript. There are two types of nodes because 
-in general graph languages can have different kinds of nodes in them. 
+\ref{types-example-code}, which shows the description of a graph-language
+given in TypeScript. There are two types of nodes because, 
+in general, graph languages can have different kinds of nodes in them. 
 For example, in a language describing artificial neural networks, 
-there might be a convolutional layers, fully connected layers, and 
+there might be convolutional layers, fully connected layers, and 
 dropout layers as node types. Sinap Types also supports having multiple
 kinds of edges. 
 
 The model for types is composed of two parts. The first is the 
 specific representation of types given in Figure 
 \ref{sinap-types-model}. The second part defines a subtype
-relations on these types and is given in Figure \ref{subtype-definitions}.
+relation on these types and is given in Figure \ref{subtype-definitions}.
 
 Before diving into Figure \ref{sinap-types-model} and 
 a formal representation of each of the types, here is a presentation 
-of the various types with descriptions in english. 
+of the various types with descriptions in English. 
 \begin{itemize}
     \item \(\StringT\) is a type representing all strings.
     \item \(\NumberT\) is a type representing all numbers.
@@ -375,10 +378,18 @@ of the various types with descriptions in english.
     describes an object type. Its name is the first argument, 
     its super-type is the second argument, and the new fields 
     it introduces is the tuple of (key, value) pairs that form the
-    last argument. 
+    last argument. To give an example, the following TypeScript
+    \begin{verbatim}
+class A { b : string; }
+    \end{verbatim} 
+    code is equivalent to \(\ObjT(``\text{A}", \NoSuper, 
+    ((``\text{b}", \StringT)))\). 
     \item \(\InterT(\ObjT,  ...)\) is the intersection of several 
     object types and acts like a single object type with all the 
     properties of the intersected types. 
+    To aid in understanding, \verb|class A {a : string; }| intersected
+    with \verb|class B { b : string; }| acts like 
+    \verb|class C {a : string; b : string; }|. 
     \item \(\UnionT(\Type, ...)\) is a union of several types. 
     Values with this type act as a collection with a single element
     whose type is one of the \(\{(\Type)_i\}\). In Sinap, a drop down 
@@ -435,19 +446,30 @@ relation (\(\bullet\subtype\bullet\)). Subtypes correspond
 roughly to the idea that if \(A\subtype B\) then \(A\)
 can be used where \(B\) can be used. The subtype relation,
 as formally described in Figures \ref{subtype-definitions} and \ref{subtype-helpers}, 
-defines literals as subtypes of their respective general types.
-For example \(\LitT(\text{``Hello"})\subtype\StringT\). It defines
-record subtypes structurally; that is, all the supertype's fields 
+defines: 
+\begin{itemize}
+    \item literals as subtypes of their respective general types.
+For example \(\LitT(\text{``Hello"})\subtype\StringT\). 
+    \item record subtypes structurally; that is, all the supertype's fields 
 are present in the subtype and the types of these fields in the subtype
 are subtypes of the corresponding fields in the supertype. 
-Objects are subtyped nominally, meaning that the supertype must be
-found somewhere in the subtype's inheritance chain. Unions are
-subtypes of other unions as long as all of the types in the 
-subtype are subtypes of some type in the supertype. Intersections are 
-subtypes of other intersections if all the supertype's elements are 
-subtypes of all the elements of the suptertype. Additionally, 
-intersections are subtypes of objects that they contain. Lists, 
-Sets, and Maps are subtypes if their arguments are subtypes. 
+    So \[\RecT((\text{``a"}, \LitT(\text{``Hello"})), (\text{``b"}, \NumberT))
+    <: \RecT((\text{``a"}, \StringT)))\]
+    \item objects nominally, meaning that the supertype must be
+found somewhere in the subtype's inheritance chain.
+    \begin{align*}
+        \Gamma(A) &= \ObjT(\textq{A}, \NoSuper, ()) \\
+        \Gamma(B) &= \ObjT(\textq{B}, A, ()) \\
+        B &<: A
+    \end{align*}
+    \item Unions are subtypes of other unions as long as all of the types in the 
+subtype are subtypes of some type in the supertype.
+    \item Intersections are subtypes of other intersections if 
+    all the supertype's elements are subtypes of all the elements of the suptertype.
+    Additionally, intersections are subtypes of objects that they contain.
+    \item Lists, Sets, and Maps are subtypes if their arguments are subtypes. 
+    That is \[\ListT(\LitT(\textq{Hello})) <: \ListT(\StringT)\].
+\end{itemize}
 
 This definition of subtypes for Lists, Maps, and Sets is unsound
 as illustrated by the following pseudo-TypeScript code 
@@ -462,16 +484,16 @@ as illustrated by the following pseudo-TypeScript code
 \end{verbatim}
 
 This behavior is the same as Java which made this design decision 
-because often lists are only read programmers often want
+because often lists are only read and programmers often want
 this behavior. When I created the model for Sinap Types,
 I noticed this defect with the logic, thereby validating 
 the effort spent creating the model. 
 
 Fortunately, in Sinap IDE, multiple references to 
-the same collection aren't being created,
-so this defect doesn't come up. A later release 
+the same collection are not being created,
+so this defect does not come up. A later release 
 of Sinap Types will include a fix for this bug in 
-case Sinap Types is used in a case where this assumption isn't
+case Sinap Types is used in a case where this assumption is not
 valid.
 
 \newcommand{\stfif}{\\&\textif}
@@ -572,8 +594,8 @@ Having presented a description of valid graph structures for some
 interpreter, we need to define a language for describing specific 
 graphs. 
 Note that Values are parameterized by \(\Sigma\), a ``store" that
-maps \(\ValueRef\)s to \(\Value\)s. I present a formal specification of
-\(\Value\) can be found in Figure \ref{value-definition}.
+maps references to \(\Value\)s. I present a formal specification of
+\(\Value\) which can be found in Figure \ref{value-definition}.
 Each kind of Value has a type and a body which holds the value that 
 goes with the type. 
 A valid graph then is defined by 
@@ -644,7 +666,6 @@ better be understood in Figure \ref{values-example2}.
 \newcommand{\treeDraw}[2]{#1 \left(\begin{aligned} &#2\end{aligned}\right)}
 \newcommand{\treeNext}{,\\&}
 \newcommand{\valRef}[1]{\ValueRef_\textit{#1}}
-\newcommand{\textq}[1]{\text{``#1"}}
 
 \begin{figure}
 % \capstart
@@ -710,7 +731,7 @@ in the Sinap Type System.}
 
 \section{APPLICATIONS IN SINAP IDE}
 
-When using the Sinap Type-System to create the IDE we added 
+When using the Sinap Type's System to create the IDE we added 
 some invariants to specialize the Type System to graphs. 
 \begin{enumerate}
     \item There must be types Nodes and Edges which are unions of \(\ObjT\) subtypes. 
@@ -721,7 +742,9 @@ some invariants to specialize the Type System to graphs.
 \end{enumerate}
 
 This allows programmers writing interpreters to access connectivity information, 
-a critical element of creating a graph interpreter. 
+a critical element of creating a graph interpreter. This also allows
+for easily adding constraints to the system by adding more specific types
+to the ``parents'', ``children'', ``source'', and/or ``destination'' fields.
 
 The Sinap Type System is useful for generically describing data-structures so that 
 user interfaces can specialize to handle them. We implemented Sinap's Type System
@@ -729,14 +752,27 @@ as a TypeScript library that gives runtime access to the types
 of all values used. We implemented loaders to build the type information 
 for this library from TypeScript source code and to build it dynamically from 
 Python. This allows Sinap Plugins to be built in Python or TypeScript. 
-The TypeScript implementation is especially powerful it allows programmers 
+The TypeScript implementation is especially powerful because it allows programmers 
 to create an interpreter for a graph based language and have it work with 
 Sinap IDE with little to no extra effort. 
 
 \section{CONCLUSION}
 
+Having a formal model of the Type System helps to find
+defects in the system and creates a basis atop which 
+further study of the model becomes possible. 
+It makes the Type System more valuable as a standalone 
+system because it can be used in contexts where formal
+verification techniques are desired. 
 
+The Type System is the central component of Sinap IDE. 
+In the Model View Controller (MVC) framework, the Type System
+is used to implement the model for the application. The fact that
+the exact structure of this model is defined not internally to
+the application, but flexibly by potentially third-party plugins,
+is a testament to the power that the Type System provides. 
 
+\newpage
 \todo{include the url for the jflap:challenges}
 % url = {http://www.cs.duke.edu/education/undergrad/assets_research/2014_ian_mcmahon_thesis.pdf},
 \bibliographystyle{apacite}
