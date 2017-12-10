@@ -236,8 +236,9 @@ that it receives. The Type System also allows different kinds of nodes and
 edges to exist in the same graph and allows for rules defining what kinds of
 nodes can connect to which edges. 
 
-\todo{``The model is going to be next''}
-
+In order to better understand the Type System, I have created a 
+formal model of a subset of the language. This allows proofs of
+its behavior and simplifies understanding of system. 
 
 \section{BACKGROUND}
 
@@ -249,26 +250,43 @@ C and C++ have an enormous formal document specifying the semantics
 of the language. 
 
 For studying a language academically, it is useful to create a model
-of a language \cite{redexbook}.
+of a language \cite{redexbook}. Some examples of languages with 
+formal models associated with all or much of their behavior are
+Featherweight Java \cite{Igarashi:2001:FJM:503502.503505}, 
+Lua \cite{DBLP:journals/corr/SoldevilaZSFM17}, 
+and Standard ML \cite{Milner:1997:DSM:549659}. This is helpful because
+it allows formal guarantees about the behavior of well-formed
+programs. It is also useful because a model is often easier to 
+read and more concise than a full implementation of a language. 
 
-\todo{CONTINUE HERE}
-
-
-Featherweight Java
-Lua
-Standard ML
-
+The remainder of this thesis will present a model of Sinap's Type 
+System. 
 
 \section{TYPES}
 
 \subsection{Notation}
 
-The symbol \((\operatorname{Kind}_1, ...)\) is equivalent to 
-\((\operatorname{Kind}_i)\). They are also equivalent to 
-\((\operatorname{Kind}_1, ..., \operatorname{Kind}_n)\)
+Since Sinap's Type System is a library and has no concrete 
+syntax, the model adopts a contrived syntax similar to that
+used in mathematics. The library is implemented in TypeScript
+and the conversion straightforward and is exemplified by 
+the following example.
+
+\begin{tabular}{rcl}
+    \verb|new Type.Primitive("string")|&=&\(\StringT\) \\
+    \verb|new Type.Literal("hello")|&=&\(\LitT(\text{``hello"})\) 
+\end{tabular}
+
+\newcommand{\Kind}{\textit{Kind}}
+
+When discussing finite lists, the symbol 
+\((\Kind_1, ...)\) is equivalent to 
+\((\Kind_i)\). They are also equivalent to 
+\((\Kind_1, ..., \Kind_n)\)
 where \(n\) is unspecified and represent an ordered list 
-of \(n\) elements. \(\{\operatorname{Kind}_i\}\) represents 
-the set of the elements of the list. 
+of \(n\) elements. \(\{\Kind_i\}\) represents 
+the set of the elements of the list. These are also valid 
+as argument lists to functions. 
 
 ``\(\_\)'' represents a symbol that has been omitted for brevity. 
 Because much of the model is uses deeply nested parentheses, 
@@ -714,6 +732,10 @@ Python. This allows Sinap Plugins to be built in Python or TypeScript.
 The TypeScript implementation is especially powerful it allows programmers 
 to create an interpreter for a graph based language and have it work with 
 Sinap IDE with little to no extra effort. 
+
+\section{CONCLUSION}
+
+
 
 \todo{include the url for the jflap:challenges}
 % url = {http://www.cs.duke.edu/education/undergrad/assets_research/2014_ian_mcmahon_thesis.pdf},
