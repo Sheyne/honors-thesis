@@ -62,10 +62,8 @@
     \DeclareMathOperator{\InterOrObj}{InterOrObj}
     \DeclareMathOperator{\ObjectSubtype}{ObjectSubtype_\Gamma}
     \DeclareMathOperator{\RecordSubtype}{RecordSubtype}
-    \DeclareMathOperator{\Value}{Value_{\Gamma, \Sigma}}
-    \DeclareMathOperator{\IdentifierV}{StringV}
-    \DeclareMathOperator{\NumberV}{NumberV}
-    \DeclareMathOperator{\BooleanV}{BooleanV}
+    \DeclareMathOperator{\Value}{\textit{Value}_{\Gamma, \Sigma}}
+    \DeclareMathOperator{\PrimitiveV}{PrimitiveV}
     \DeclareMathOperator{\RecV}{RecV_{\Gamma, \Sigma}}
     \DeclareMathOperator{\ObjV}{ObjV_{\Gamma, \Sigma}}
     \DeclareMathOperator{\ListV}{ListV_{\Gamma, \Sigma}}
@@ -97,8 +95,7 @@
 \let\oldtodo\todo
 \renewcommand{\todo}[1]{\oldtodo[inline]{#1}}
 
-\todo{re-include the cover page}
-% \includepdf[fitpaper=true, pages=1]{honorsstuff.pdf}
+\includepdf[fitpaper=true, pages=1]{honorsstuff.pdf}
 
 \section{ABSTRACT}
 
@@ -167,19 +164,22 @@ suit the plugin that is associated with the active graph.
 
 The main objectives of Sinap are twofold. First, we believe that one
 of the major blockers for the adoption of graph-based languages is 
-a lack of adequate tooling. If I were to invent a new text-based programming
-language, I wouldn't first have to write a text editor. The problem is
-that, until we created Sinap, if I was creating a graph based programming
-language, I would first have to make a graph editor. Sinap IDE 
+a lack of adequate tooling. If someone were to invent a new text-based programming
+language, they would not first have to write a text editor. The problem is
+that, until we created Sinap, if someone was creating a graph based programming
+language, they would first have to make a graph editor. Sinap IDE 
 offers a flexible editor that will work with any graph. Second, 
 the tools for manipulating automata as used throughout computation 
-theory are inadequate. 
+theory are inadequate. As noted above, JFLAP can be buggy and 
+difficult to use and there are not good alternatives to it. 
 
-I was involved with the project as a whole, including architecting 
-data-flow throughout the application, building the interpreters
-for the stock plugins, setting up automatic testing, continuous 
-intergration, and builds, and generally quashing bugs throughout
-the application. However, my main focus was on the Type System. 
+Sinap IDE involved building a user interface for the graph editor and
+interfaces for the various testing and editing components. 
+It also involved various software design practices, such as
+consistent, automatic builds, continuous integration, 
+unit testing, and issue tracking. The central component of the IDE is 
+the Type System which I implemented and is what the remainder of this
+thesis will focus on.
 
 While editing a graph, components of the
 graph will have different attributes associated with them 
@@ -241,7 +241,10 @@ nodes can connect to which edges.
 
 In order to better understand the Type System, I have created a 
 formal model of a subset of the language. This allows proofs of
-its behavior and simplifies understanding of system. 
+its behavior and simplifies understanding of system. This model 
+is non-trivial because the Type System uses some unique types 
+such as type for literals, covariant collection types, and the
+ability to intersect class types together. 
 
 \section{BACKGROUND}
 
@@ -376,8 +379,9 @@ of the various types with descriptions in English.
     \((\Type)_1\) to \((\Type)_2\).
     \item \(\ObjT(\Identifier, \Identifier | \NoSuper, ((\Identifier, \Type), ...))\)
     describes an object type. Its name is the first argument, 
-    its super-type is the second argument, and the new fields 
-    it introduces is the tuple of (key, value) pairs that form the
+    its super-type is the second argument with \(\NoSuper\) indicating that
+    the class has no super-type. The new fields 
+    the object introduces is the tuple of (key, value) pairs that form the
     last argument. To give an example, the following TypeScript
     \begin{verbatim}
 class A { b : string; }
@@ -594,7 +598,44 @@ Having presented a description of valid graph structures for some
 interpreter, we need to define a language for describing specific 
 graphs. 
 Note that Values are parameterized by \(\Sigma\), a ``store" that
-maps references to \(\Value\)s. I present a formal specification of
+maps references to \(\Value\)s. This is necessary because models are 
+written in terms of trees, and using a store is the normal 
+approach to allow cycles. Value terminals all contain 
+exactly two arguments. The first is the specific type that the 
+value is storing and the second one actually holds the data.
+
+\begin{itemize}
+    \item \(\PrimitiveV(\_, \_)\) holds
+    strings, numbers, and booleans and can be typed 
+    generically with \(\StringT\), \(\NumberT\), or \(\BooleanT\),
+    with \(\LitT(\JSLit)\) and the appropriate literal type. 
+
+    For example, 
+    \(\PrimitiveV(\Number, 17)\) and 
+    \(\PrimitiveV(\LitT(17), 17)\)
+    are valid, but 
+    \(\PrimitiveV(\LitT(17), 16)\)
+    is not.
+
+    Originally, primitives could also hold unions, 
+    but that made Sinap's Type System very difficult 
+    to understand and the functionality was removed. 
+    \item \(\ObjV(\_, \_)\) holds object subtypes, specifically objects and 
+    intersections. The data are arranged in the same way that object
+    types are structured with a list of pairs of \((\Identifier, \Value)\).
+    \item \(\RecV(\_, \_)\) holds records in much the same way that 
+    objects are stored.
+    \item \(\UnionV(\_, \_)\) holds a union. This merely passes the 
+    responsibility of storing the value to a value corresponding to
+    the member of union that is currently being stored. The purpose 
+    of having this value at all is to allow the type system to 
+    differentiate between a type that only allows a specific kind
+    of value, and a union where the value is merely one of the options.
+    \item \(\ListV(\_, \_), \MapV(\_, \_), \text{ and } \SetV(\_, \_)\)
+    hold lists, maps, and sets without surprises. 
+\end{itemize}
+
+I present a formal specification of
 \(\Value\) which can be found in Figure \ref{value-definition}.
 Each kind of Value has a type and a body which holds the value that 
 goes with the type. 
@@ -612,11 +653,14 @@ better be understood in Figure \ref{values-example2}.
 % \capstart
 \begin{mdframed}
 \begin{align*}
-    \Value =& \IdentifierV((\Type)_1, \Identifier_1) \newlinewhere (\Type)_1 \subtype \StringT \\
-    &| \NumberV((\Type)_1, \Number_1) \newlinewhere (\Type)_1 \subtype \NumberT \\
-    &| \BooleanV((\Type)_1, \Boolean_1) \newlinewhere (\Type)_1 \subtype \BooleanT \\
-    &| \ObjV((\Type)_1, V=((\Identifier_1, \ValueRef_1]), ...)) \newlinewhere
+    \Value =& \PrimitiveV((\Type)_1, \Identifier_1) 
+    \newlinewhere (\Type)_1 \subtype \UnionT(\StringT, \NumberT, \BooleanT)  \\
+    &| \ObjV((\Type)_1, V=((\Identifier_1, \ValueRef_1)), ...)) \newlinewhere
     \ObjPairsMatch(\ObjFields((\Type)_1), V) \\
+    &| \RecV\left(\begin{aligned}
+        &\RecT(P=((\Identifier_1, (\Type)_1), ...)),\\&V=((\Identifier_1, \ValueRef_1)), ...)
+    \end{aligned}\right) \newlinewhere
+    \ObjPairsMatch(P, V) \\
     &| \UnionV(\UnionT(..., (\Type)_i, ...), \ValueRef_1) \newlinewhere
     \ValueType(\ValueRef_1) \subtype (\Type)_i\\
     &| \ListV(\ListT((\Type)_1), (\ValueRef_1, ...)) \newlinewhere \ValueType(\ValueRef_i) \subtype (\Type)_1 \\
@@ -629,13 +673,11 @@ better be understood in Figure \ref{values-example2}.
 \end{align*}
 \begin{align*}
     \ObjFields&(\ObjT(\_, \Identifier_S, (P_1 = (\Identifier_1, (\Type)_1), ...))) \\&= \operatorname{concat}(\ObjFields(\LookupObjRef(\Identifier_S), (P_n))) \\
-    \ObjFields&(\InterT(ObjT_1, ...)) \\&= \operatorname{concat}(\ObjFields(\ObjT_1), ...)
+    \ObjFields&(\InterT(ObjT_1, ...)) \\&= \operatorname{concat}(\ObjFields(\ObjT_1), ...) \\
 \end{align*}
 \begin{align*}
     \ValueType(\ValueRef_1) &= \ValueType(\ValueDeref{\ValueRef_1}) \\
-    \ValueType(\IdentifierV((\Type)_1, \_)) &= (\Type)_1 \\
-    \ValueType(\NumberV((\Type)_1, \_)) &= (\Type)_1 \\
-    \ValueType(\BooleanV((\Type)_1, \_)) &= (\Type)_1 \\
+    \ValueType(\PrimitiveV((\Type)_1, \_)) &= (\Type)_1 \\
     \ValueType(\ObjV((\Type)_1, \_)) &= (\Type)_1 \\
     \ValueType(\UnionV((\Type)_1, \_)) &= (\Type)_1 \\
     \ValueType(\ListV((\Type)_1, \_)) &= (\Type)_1 \\
@@ -673,13 +715,13 @@ better be understood in Figure \ref{values-example2}.
 \begin{align*}
     \Sigma(\valRef{0O})&=\ObjV(\ObjT_0, ())\\ 
     \Sigma(\valRef{0U})&=\UnionV(\UnionT_0, \valRef{0O})\\
-    \Sigma(\valRef{1S})&=\treeDraw\IdentifierV{\StringT_1, \textq{Start Node}}\\
+    \Sigma(\valRef{1S})&=\treeDraw\PrimitiveV{\StringT_1, \textq{Start Node}}\\
     \Sigma(\valRef{1O})&=\treeDraw\ObjV{\ObjT_1,\treeDraw{}{
         (\textq{label}, \valRef{1S})\treeNext
         (\textq{destination}, \valRef{3U})
         }}\\
     \Sigma(\valRef{1U})&=\treeDraw\UnionV{\UnionT_1, \valRef{1O}}\\
-    \Sigma(\valRef{2S})&=\treeDraw\IdentifierV{\StringT_2, \textq{End Node}}\\
+    \Sigma(\valRef{2S})&=\treeDraw\PrimitiveV{\StringT_2, \textq{End Node}}\\
     \Sigma(\valRef{2O})&=\treeDraw\ObjV{\ObjT_2,\treeDraw{}{
         (\textq{label}, \valRef{2S})\treeNext
         (\textq{destination}, \text{nil})
@@ -711,8 +753,8 @@ in the Sinap Type System.}
         "1O" [label="1O : ObjV"];
         "2O" [label="2O : ObjV"];
         "3O" [label="3O : ObjV"];
-        "1S" [label="1S : StringV = Start Node"];
-        "2S" [label="2S : StringV = End Node"];
+        "1S" [label="1S : PrimitiveV = Start Node"];
+        "2S" [label="2S : PrimitiveV = End Node"];
         "4" [label="4 : ListV"];
         "1U" -> "1O";
         "1O" -> "1S" [label="label"];
@@ -773,12 +815,10 @@ the application, but flexibly by potentially third-party plugins,
 is a testament to the power that the Type System provides. 
 
 \newpage
-\todo{include the url for the jflap:challenges}
-% url = {http://www.cs.duke.edu/education/undergrad/assets_research/2014_ian_mcmahon_thesis.pdf},
 \bibliographystyle{apacite}
 \bibliography{bib}{}
 
-\todo{reinclude the final page}
-% \includepdf[fitpaper=true, pages=5]{honorsstuff.pdf}
+\includepdf[fitpaper=true, pages=5]{honorsstuff.pdf}
+
 
 \end{document}
