@@ -243,19 +243,20 @@ In order to better understand the Type System, I have created a
 formal model of a subset of the language. This model supports proof of
 its behavior and simplifies understanding of system. This model 
 is non-trivial, because the Type System uses some unique types 
-such as a type for literals, covariant collection types, and the
-ability to intersect class types together. 
+such as types that correspond to literals values,
+covariant collection types, and 
+types for intersections of classes. 
 
 \section{BACKGROUND}
 
-For many programming languages the only specification for 
+For many programming languages, the only specification for 
 semantics is the reference implementation of the interpreter or compiler. 
 Python, for example, specifies valid behavior based on the behavior of the
 CPython interpreter \cite{cpython}. Other languages, such as 
 C and C++ have an enormous formal document specifying the semantics
 of the language. 
 
-For studying a language academically, it is useful to create a model
+For studying a language more formally, it is useful to create a model
 of a language \cite{redexbook}. Some examples of languages with 
 formal models associated with all or much of their behavior are
 Featherweight Java \cite{Igarashi:2001:FJM:503502.503505}, 
@@ -273,7 +274,7 @@ System.
 
 Since Sinap's Type System is a library and has no concrete 
 syntax, the model adopts a contrived syntax similar to that
-used in mathematics. The library is implemented in TypeScript
+used in mathematics. The library is implemented in TypeScript,
 and the conversion is straightforward as exemplified by 
 the following.
 
@@ -286,7 +287,7 @@ the following.
 
 When discussing finite lists, the symbol 
 \((\Kind_1, ...)\) is equivalent to 
-\((\Kind_i)\). Both symbols are also equivalent to 
+\((\Kind_i)\). Both forms are also equivalent to 
 \((\Kind_1, ..., \Kind_n)\)
 where \(n\) is unspecified and represents an ordered list 
 of \(n\) elements. \(\{\Kind_i\}\) represents 
@@ -403,7 +404,7 @@ class A { b : string; }
 \end{itemize}
 
 \(\Gamma\) is an 
-argument to the subtype relation which is used by \(\ObjectSubtype\) to 
+argument to the subtype relation, and it is used by is used by \(\ObjectSubtype\) to 
 lookup supertypes by name. These informal 
 descriptions of the various types are recognized formally 
 in Figure \ref{sinap-types-model}.
@@ -445,7 +446,7 @@ to define Node1.
 
 \subsection{Subtype Relations}
 
-With types defined, it is necessary to define a subtype 
+With types defined, we define a subtype 
 relation (\(\bullet\subtype\bullet\)). Subtypes correspond 
 roughly to the idea that if \(A\subtype B\) then \(A\)
 can be used where \(B\) can be used. The subtype relation,
@@ -455,7 +456,7 @@ defines:
     \item literals as subtypes of their respective general types.
 For example \(\LitT(\text{``Hello"})\subtype\StringT\). 
     \item record subtypes structurally; that is, all the supertype's fields 
-are present in the subtype and the types of these fields in the subtype
+are present in the subtype, and the types of these fields in the subtype
 are subtypes of the corresponding fields in the supertype. 
     So \[\RecT((\text{``a"}, \LitT(\text{``Hello"})), (\text{``b"}, \NumberT))
     <: \RecT((\text{``a"}, \StringT)))\]
@@ -476,6 +477,7 @@ subtype are subtypes of some type in the supertype.
 \end{itemize}
 
 This definition of subtypes for Lists, Maps, and Sets is unsound
+for a typical language
 as illustrated by the following pseudo-TypeScript code 
 (TypeScript uses a different subtype relation).
 
@@ -494,11 +496,10 @@ I noticed this defect with the logic, thereby validating
 the effort spent creating the model. 
 
 Fortunately, in Sinap IDE, multiple references to 
-the same collection are not being created,
+the same collection are not created,
 so this defect does not come up. A later release 
 of Sinap Types will include a fix for this bug in 
-case Sinap Types is used in a case where this assumption is not
-valid.
+case Sinap Types is used in a setting with multiple references.
 
 \newcommand{\stfif}{\\&\textif}
 
@@ -598,7 +599,7 @@ Having presented a description of valid graph structures for some
 interpreter, we need to define a language for describing specific 
 graphs. 
 Note that Values are parameterized by \(\Sigma\), a ``store" that
-maps references to \(\Value\)s. This is necessary because models are 
+maps references to \(\Value\)s. A store is necessary because models are 
 written in terms of trees, and using a store is the normal 
 approach to allow cycles. Value terminals all contain 
 exactly two arguments. The first is the specific type that the 
@@ -625,7 +626,7 @@ value is storing and the second one actually holds the data.
     types are structured with a list of pairs of \((\Identifier, \Value)\).
     \item \(\RecV(\_, \_)\) holds records in much the same way that 
     objects are stored.
-    \item \(\UnionV(\_, \_)\) holds a union. This merely passes the 
+    \item \(\UnionV(\_, \_)\) holds a union. This representation merely passes the 
     responsibility of storing the value to a value corresponding to
     the member of union that is currently being stored. The purpose 
     of having this value at all is to allow the type system to 
@@ -773,18 +774,18 @@ in the Sinap Type System.}
 
 \section{APPLICATIONS IN SINAP IDE}
 
-When using the Sinap Type's System to create the IDE we added 
+When using the Sinap Type's System to create the IDE, we added 
 some invariants to specialize the Type System to graphs. 
 \begin{enumerate}
-    \item There must be types Nodes and Edges which are unions of \(\ObjT\) subtypes. 
+    \item There must be types Nodes and Edges that are unions of \(\ObjT\) subtypes. 
     \item If any Edges type specifies ``source'' or ``destination'', it must be a Nodes subtype
     and its type will be respected and added as a constraint when creating graphs.
     \item The same goes for Nodes, except that the names are ``children'' and 
-    ``parents'' and the types have to be lists of edges.
+    ``parents'', and the types have to be lists of edges.
 \end{enumerate}
 
-This allows programmers writing interpreters to access connectivity information, 
-a critical element of creating a graph interpreter. This also allows
+These invariants allow programmers writing interpreters to access connectivity information, 
+a critical element of creating a graph interpreter. The invariants also allow
 for easily adding constraints to the system by adding more specific types
 to the ``parents'', ``children'', ``source'', and/or ``destination'' fields.
 
@@ -793,8 +794,8 @@ user interfaces can specialize to handle them. We implemented Sinap's Type Syste
 as a TypeScript library that gives runtime access to the types 
 of all values used. We implemented loaders to build the type information 
 for this library from TypeScript source code and to build it dynamically from 
-Python. This allows Sinap Plugins to be built in Python or TypeScript. 
-The TypeScript implementation is especially powerful because it allows programmers 
+Python. These libraries allows Sinap Plugins to be built in Python or TypeScript. 
+The TypeScript implementation is especially powerful, because it allows programmers 
 to create an interpreter for a graph based language and have it work with 
 Sinap IDE with little to no extra effort. 
 
@@ -804,7 +805,7 @@ Having a formal model of the Type System helps to find
 defects in the system and creates a basis atop which 
 further study of the model becomes possible. 
 It makes the Type System more valuable as a standalone 
-system because it can be used in contexts where formal
+system, because it can be used in contexts where formal
 verification techniques are desired. 
 
 The Type System is the central component of Sinap IDE. 
