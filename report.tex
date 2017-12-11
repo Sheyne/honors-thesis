@@ -12,7 +12,6 @@
     \usepackage{pdfpages}
     \usepackage[parfill]{parskip}
     \usepackage{amsopn}
-    \usepackage{todonotes}
     \usepackage{mathtools}
     \usepackage[utf8]{inputenc}
     \usepackage{multicol}
@@ -92,14 +91,10 @@
 \title{Sinap's Type System}
 \author{Sheyne Anderson}
 \renewcommand{\thepage}{\roman{page}}
-\let\oldtodo\todo
-\renewcommand{\todo}[1]{\oldtodo[inline]{#1}}
 
 \includepdf[fitpaper=true, pages=1]{honorsstuff.pdf}
 
 \section{ABSTRACT}
-
-\todo{polish the abstract. To Matt: suggestions?}
 
 Sinap IDE is an editor for graph-based programming languages
 (as distinct from text-based).
@@ -116,8 +111,6 @@ to models of programming languages such as Lua or Standard ML.
 \newpage
 
 \tableofcontents
-\todo{remove the todolist}
-\listoftodos
 \newpage
 \setcounter{page}{1}
 \renewcommand{\headrulewidth}{0pt}
